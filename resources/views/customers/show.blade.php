@@ -151,6 +151,7 @@
     @endif
 </div>
 
+<<<<<<< Updated upstream
 {{-- ... bestaande code ... --}}
 
 <!-- Snelle Acties -->
@@ -184,5 +185,8 @@
         </div>
         @endif
     </div>
+=======
+
+>>>>>>> Stashed changes
 </div>
 @endsection

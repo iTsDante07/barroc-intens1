@@ -8,10 +8,73 @@ use Illuminate\Http\Request;
 
 class MaintenanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+<<<<<<< Updated upstream
         $maintenances = Maintenance::with(['customer', 'assignedTechnician'])->get();
         return view('maintenance.index', compact('maintenances'));
+=======
+        try {
+            // Begin met de base query
+            $query = Maintenance::query();
+
+            // Filter toepassen als er een filter parameter is
+            if ($request->has('filter')) {
+                switch ($request->filter) {
+                    case 'gepland':
+                        $query->where('status', 'gepland')
+                            ->where('scheduled_date', '>=', now());
+                        break;
+
+                    case 'in_uitvoering':
+                        $query->where('status', 'in_uitvoering');
+                        break;
+
+                    case 'voltooid':
+                        $query->where('status', 'voltooid');
+                        break;
+
+                    case 'overdue':
+                        $query->where('status', 'gepland')
+                            ->where('scheduled_date', '<', now());
+                        break;
+
+                    // 'alle' geval heeft geen extra where clause nodig
+                }
+            }
+
+            // Haal de gefilterde maintenances op met relationships
+            $maintenances = $query->with(['customer', 'assignedTechnician'])->get();
+
+            // Tel de statistieken (altijd van ALLE records, niet gefilterd)
+            $upcomingCount = Maintenance::where('status', 'gepland')
+                                    ->where('scheduled_date', '>=', now())
+                                    ->count();
+
+            $overdueCount = Maintenance::where('status', 'gepland')
+                                    ->where('scheduled_date', '<', now())
+                                    ->count();
+
+            $completedCount = Maintenance::where('status', 'voltooid')->count();
+
+            return view('maintenance.index', [
+                'maintenances' => $maintenances,
+                'upcomingCount' => $upcomingCount,
+                'overdueCount' => $overdueCount,
+                'completedCount' => $completedCount
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Maintenance index error: ' . $e->getMessage());
+
+            return view('maintenance.index', [
+                'maintenances' => collect(),
+                'upcomingCount' => 0,
+                'overdueCount' => 0,
+                'completedCount' => 0
+            ]);
+        }
+>>>>>>> Stashed changes
     }
 
     public function create()

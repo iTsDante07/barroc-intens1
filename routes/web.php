@@ -62,9 +62,18 @@ Route::middleware('auth')->group(function () {
     Route::resource('invoices', InvoiceController::class);
 
     // Maintenance routes
+<<<<<<< Updated upstream
     Route::get('/maintenance', function () {
         return view('maintenance.index');
     })->name('maintenance.index');
+=======
+    Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
+    // Maintenance Routes
+    Route::resource('maintenance', MaintenanceController::class);
+    Route::post('/maintenance/{maintenance}/start', [MaintenanceController::class, 'start'])->name('maintenance.start');
+    Route::post('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
+    Route::post('/maintenance/{maintenance}/cancel', [MaintenanceController::class, 'cancel'])->name('maintenance.cancel');
+>>>>>>> Stashed changes
 
     // Admin routes
     Route::get('/users', function () {
