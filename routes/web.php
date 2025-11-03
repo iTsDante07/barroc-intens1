@@ -9,6 +9,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\MaintenanceController;
+
 
 
 Route::get('/login', function () {
@@ -40,6 +42,24 @@ Route::post('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPai
 Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download.pdf');
 Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
 Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download.pdf');
+// Invoice routes
+Route::get('/invoices/create-from-quote/{quote}', [InvoiceController::class, 'createFromQuote'])->name('invoices.create.from.quote');
+Route::post('/invoices/store-from-quote/{quote}', [InvoiceController::class, 'storeFromQuote'])->name('invoices.store.from.quote');
+Route::resource('invoices', InvoiceController::class)->except(['create', 'store']);
+Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
+Route::post('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid'])->name('invoices.mark.paid');
+Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download.pdf');
+// maintenance routes
+Route::resource('maintenance', MaintenanceController::class);
+Route::post('/maintenance/{maintenance}/start', [MaintenanceController::class, 'start'])->name('maintenance.start');
+Route::post('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
+Route::post('/maintenance/{maintenance}/cancel', [MaintenanceController::class, 'cancel'])->name('maintenance.cancel');
+Route::post('/maintenance/{maintenance}/technician-notes', [MaintenanceController::class, 'addTechnicianNotes'])->name('maintenance.technician-notes');
+Route::get('/customers/{customer}/maintenance/create', [MaintenanceController::class, 'createForCustomer'])->name('maintenance.create-for-customer');
+Route::get('/check-table', function() {
+    $columns = Schema::getColumnListing('maintenances');
+    dd($columns);
+});
 
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -62,9 +82,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('invoices', InvoiceController::class);
 
     // Maintenance routes
-    Route::get('/maintenance', function () {
-        return view('maintenance.index');
-    })->name('maintenance.index');
+    Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
 
     // Admin routes
     Route::get('/users', function () {
