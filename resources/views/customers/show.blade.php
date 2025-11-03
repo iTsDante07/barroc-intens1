@@ -150,39 +150,5 @@
     </div>
     @endif
 </div>
-
-{{-- ... bestaande code ... --}}
-
-<!-- Snelle Acties -->
-<div class="mt-8 bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Snelle Acties</h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        @if($customer->bkr_checked && $customer->bkr_approved)
-        <a href="{{ route('quotes.create.for.customer', $customer) }}" class="bg-green-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors text-center flex flex-col items-center justify-center">
-            <span class="text-2xl mb-2">📄</span>
-            <span>Offerte Maken</span>
-        </a>
-        <a href="{{ route('maintenance.create.for.customer', $customer) }}" class="bg-blue-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors text-center flex flex-col items-center justify-center">
-            <span class="text-2xl mb-2">🔧</span>
-            <span>Onderhoud Inplannen</span>
-        </a>
-        <a href="mailto:{{ $customer->email }}?subject=Barroc Intens Contact" class="bg-purple-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-purple-600 transition-colors text-center flex flex-col items-center justify-center">
-            <span class="text-2xl mb-2">📞</span>
-            <span>Contact Opnemen</span>
-        </a>
-        @elseif($customer->bkr_checked && !$customer->bkr_approved)
-        <div class="md:col-span-3 bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-            <p class="text-red-700 font-semibold">⚠️ Deze klant is BKR afgekeurd. Offertes maken is niet mogelijk.</p>
-        </div>
-        @else
-        <div class="md:col-span-3 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-            <p class="text-yellow-700 font-semibold">⏳ Voer eerst een BKR check uit om acties beschikbaar te maken.</p>
-            <a href="{{ route('customers.bkr-confirm', $customer) }}" class="inline-block mt-2 bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
-                BKR Check Uitvoeren
-            </a>
-        </div>
-        @endif
-    </div>
 </div>
 @endsection
