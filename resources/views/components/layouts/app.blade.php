@@ -59,10 +59,10 @@
                 <!-- Sales Links -->
                 @if(auth()->user()->department && (auth()->user()->department->name === 'Sales' || auth()->user()->isManager() || auth()->user()->isAdmin()))
                 <div class="px-4 py-2 text-gray-500 text-sm font-bold">SALES</div>
-                <a href="{{ route('products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('products.*') ? 'bg-barroc-yellow text-black' : '' }}">
+                <a href="{{ route('products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('products.index') ? 'bg-barroc-yellow text-black' : '' }}">
                     📦 Producten
                 </a>
-                <a href="{{ route('customers.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('customers.*') ? 'bg-barroc-yellow text-black' : '' }}">
+                <a href="{{ route('customers.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('customers.index') ? 'bg-barroc-yellow text-black' : '' }}">
                     👥 Klanten
                 </a>
                 <a href="{{ route('customers.bkr-check') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('customers.bkr-check') ? 'bg-barroc-yellow text-black' : '' }}">
