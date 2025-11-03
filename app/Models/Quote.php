@@ -49,6 +49,15 @@ class Quote extends Model
     {
         return $this->hasMany(QuoteProduct::class);
     }
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function canCreateInvoice()
+    {
+        return $this->status === 'geaccepteerd' && $this->invoices->isEmpty();
+    }
 
     public static function generateQuoteNumber()
     {

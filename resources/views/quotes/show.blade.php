@@ -187,6 +187,66 @@
                         <span class="text-red-600">Verlopen</span>
                     @endif
                 </p>
+                {{-- ... bestaande code ... --}}
+
+                <div class="flex space-x-4">
+                    @if($quote->status === 'concept')
+                        <a href="{{ route('quotes.edit', $quote) }}" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            Bewerken
+                        </a>
+                        <form action="{{ route('quotes.send', $quote) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                                Verzenden
+                            </button>
+                        </form>
+                    @endif
+
+                    @if($quote->status === 'verzonden')
+                        <form action="{{ route('quotes.accept', $quote) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                                Accepteren
+                            </button>
+                        </form>
+                        <form action="{{ route('quotes.reject', $quote) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                                Afwijzen
+                            </button>
+                        </form>
+                    @endif
+
+                    {{-- Factuur Knop --}}
+                    @if($quote->canCreateInvoice())
+                        <a href="{{ route('invoices.create.from.quote', $quote) }}" class="bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
+                            📄 Factuur Maken
+                        </a>
+                    @endif
+
+                    @if($quote->invoices->count() > 0)
+                        <a href="{{ route('invoices.show', $quote->invoices->first()) }}" class="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-colors">
+                            🧾 Bekijk Factuur
+                        </a>
+                    @endif
+
+                    <a href="{{ route('quotes.download.pdf', $quote) }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                        PDF Downloaden
+                    </a>
+
+                    <form action="{{ route('quotes.duplicate', $quote) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                            Dupliceren
+                        </button>
+                    </form>
+
+                    <a href="{{ route('quotes.index') }}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
+                        Terug
+                    </a>
+                </div>
+
+                {{-- ... rest van de code ... --}}
             </div>
         </div>
     </div>
