@@ -4,7 +4,6 @@
 
 @section('content')
 @php
-    // Fallback voor als de variabelen niet bestaan
     $maintenances = $maintenances ?? collect();
     $upcomingCount = $upcomingCount ?? 0;
     $overdueCount = $overdueCount ?? 0;
@@ -21,7 +20,7 @@
     </a>
 </div>
 
-<!-- Statistieken -->
+<!-- Statistics -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
@@ -84,22 +83,38 @@
 <!-- Filters -->
 <div class="bg-white rounded-lg shadow p-6 mb-6">
     <div class="flex flex-wrap gap-4">
-        <a href="{{ route('maintenance.index') }}" class="px-4 py-2 rounded-lg {{ !request()->has('filter') ? 'bg-yellow-500 text-black' : 'bg-gray-200 text-gray-700' }}">
+        <a href="{{ route('maintenance.index') }}"
+           class="px-4 py-2 rounded-lg transition-colors {{ !request()->has('filter') ? 'bg-yellow-500 text-black font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
             Alle
         </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'gepland']) }}" class="px-4 py-2 rounded-lg {{ request('filter') == 'gepland' ? 'bg-yellow-500 text-black' : 'bg-gray-200 text-gray-700' }}">
+        <a href="{{ route('maintenance.index', ['filter' => 'gepland']) }}"
+           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'gepland' ? 'bg-yellow-500 text-black font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
             Gepland
         </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'in_uitvoering']) }}" class="px-4 py-2 rounded-lg {{ request('filter') == 'in_uitvoering' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+        <a href="{{ route('maintenance.index', ['filter' => 'in_uitvoering']) }}"
+           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'in_uitvoering' ? 'bg-blue-500 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
             In Uitvoering
         </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'voltooid']) }}" class="px-4 py-2 rounded-lg {{ request('filter') == 'voltooid' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+        <a href="{{ route('maintenance.index', ['filter' => 'voltooid']) }}"
+           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'voltooid' ? 'bg-green-500 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
             Voltooid
         </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'overdue']) }}" class="px-4 py-2 rounded-lg {{ request('filter') == 'overdue' ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+        <a href="{{ route('maintenance.index', ['filter' => 'overdue']) }}"
+           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'overdue' ? 'bg-red-500 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
             Overdue
         </a>
     </div>
+
+    @if(request()->has('filter'))
+    <div class="mt-4 flex items-center text-sm text-gray-600">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
+        </svg>
+        Filter: <span class="ml-1 font-semibold capitalize">{{ request('filter') }}</span>
+        <span class="ml-2 text-gray-500">({{ $maintenances->count() }} taken)</span>
+        <a href="{{ route('maintenance.index') }}" class="ml-4 text-red-600 hover:text-red-800 text-xs">Filter wissen</a>
+    </div>
+    @endif
 </div>
 
 <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -136,63 +151,42 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($maintenance->type === 'periodiek')
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                Periodiek
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Periodiek</span>
                         @elseif($maintenance->type === 'reparatie')
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                Reparatie
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Reparatie</span>
                         @elseif($maintenance->type === 'installatie')
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Installatie
-                            </span>
-                        @else
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                Onderhoud
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Installatie</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($maintenance->priority === 'urgent')
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                Urgent
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Urgent</span>
                         @elseif($maintenance->priority === 'hoog')
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
-                                Hoog
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">Hoog</span>
                         @elseif($maintenance->priority === 'normaal')
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Normaal
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Normaal</span>
                         @else
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                Laag
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Laag</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($maintenance->status === 'voltooid')
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Voltooid
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Voltooid</span>
                         @elseif($maintenance->status === 'in_uitvoering')
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                In Uitvoering
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">In Uitvoering</span>
                         @elseif($maintenance->status === 'geannuleerd')
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                Geannuleerd
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Geannuleerd</span>
+                        @elseif($maintenance->status === 'gepland' && $maintenance->scheduled_date->isPast())
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Overdue</span>
                         @else
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Gepland
-                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Gepland</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {{ $maintenance->scheduled_date->format('d-m-Y') }}
+                        @if($maintenance->status === 'gepland' && $maintenance->scheduled_date->isPast())
+                            <span class="ml-1 text-red-600" title="Overdue">⚠️</span>
+                        @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <a href="{{ route('maintenance.show', $maintenance) }}" class="text-blue-600 hover:text-blue-900">Bekijken</a>
@@ -215,6 +209,5 @@
         Eerste Taak Plannen
     </a>
 </div>
-
 @endif
 @endsection
