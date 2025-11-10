@@ -20,7 +20,7 @@
                 <div class="mb-6">
                     <label for="customer_id" class="block text-sm font-medium text-gray-700">Klant *</label>
                     <select name="customer_id" id="customer_id" required
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
+                            class="mt-1 block w-full border-yellow-400 rounded-md shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-400 focus:ring-opacity-50">
                         <option value="">Selecteer een klant</option>
                         @foreach($customers as $customer)
                             <option value="{{ $customer->id }}" data-address="{{ $customer->address }}, {{ $customer->postal_code }} {{ $customer->city }}">
