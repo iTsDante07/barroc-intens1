@@ -18,7 +18,7 @@
     </div>
 
     <!-- Main Statistics Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
         <!-- Users Card -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div class="flex items-center">
@@ -70,24 +70,6 @@
             </div>
             <div class="mt-4 pt-4 border-t border-gray-100">
                 <p class="text-xs text-gray-500">Geregistreerde klanten</p>
-            </div>
-        </div>
-
-        <!-- Revenue Card -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div class="flex items-center">
-                <div class="p-3 rounded-lg bg-emerald-50">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Totale Omzet</p>
-                    <p class="text-2xl font-bold text-gray-900">€{{ number_format($totalRevenue ?? 0, 2, ',', '.') }}</p>
-                </div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-100">
-                <p class="text-xs text-gray-500">Betaalde facturen</p>
             </div>
         </div>
     </div>

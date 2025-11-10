@@ -9,15 +9,13 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- Factuur Form -->
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Factuur Gegevens</h2>
 
-        <form action="{{ route('invoices.store.from.quote', $quote) }}" method="POST">
-            @csrf
+            <form action="{{ route('invoices.store.from.quote', $quote) }}" method="POST">
+                @csrf
 
             <div class="space-y-4">
-                <!-- Factuur Datum -->
                 <div>
                     <label for="invoice_date" class="block text-sm font-medium text-gray-700">Factuur Datum *</label>
                     <input type="date" name="invoice_date" id="invoice_date"
@@ -25,7 +23,6 @@
                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
                 </div>
 
-                <!-- Vervaldatum -->
                 <div>
                     <label for="due_date" class="block text-sm font-medium text-gray-700">Vervaldatum *</label>
                     <input type="date" name="due_date" id="due_date"
@@ -33,7 +30,6 @@
                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
                 </div>
 
-                <!-- Notities -->
                 <div>
                     <label for="notes" class="block text-sm font-medium text-gray-700">Notities</label>
                     <textarea name="notes" id="notes" rows="3"
@@ -42,7 +38,6 @@
                 </div>
             </div>
 
-            <!-- Buttons -->
             <div class="mt-6 flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <a href="{{ route('quotes.show', $quote) }}" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
                     Annuleren
@@ -54,7 +49,6 @@
         </form>
     </div>
 
-    <!-- Offerte Overzicht -->
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Offerte Details</h2>
 
@@ -75,7 +69,6 @@
                 <p class="text-2xl font-bold text-yellow-600">€{{ number_format($quote->total_amount, 2, ',', '.') }}</p>
             </div>
 
-            <!-- Producten Overzicht -->
             <div>
                 <label class="block text-sm font-medium text-gray-600 mb-2">Producten</label>
                 <div class="space-y-2">

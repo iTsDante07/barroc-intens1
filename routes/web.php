@@ -15,50 +15,16 @@ Route::get('/login', function () {
     return view('auth.custom-login');
 })->name('login');
 
+// Maintenance routes
 Route::resource('maintenance', MaintenanceController::class);
 Route::post('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
 
-// VERWIJDER DEZE REGELS VAN HIER...
-// Route::get('/customers/bkr-check', [CustomerController::class, 'bkrCheck'])->name('customers.bkr-check');
-// Route::post('/customers/quick-bkr-check', [CustomerController::class, 'quickBkrCheck'])->name('customers.quick-bkr-check');
-// Route::post('/customers/{customer}/check-bkr', [CustomerController::class, 'checkBkr'])->name('customers.check-bkr');
+// BKR routes
+Route::get('/customers/bkr-check', [CustomerController::class, 'bkrCheck'])->name('customers.bkr-check');
+Route::post('/customers/quick-bkr-check', [CustomerController::class, 'quickBkrCheck'])->name('customers.quick-bkr-check');
+Route::post('/customers/{customer}/check-bkr', [CustomerController::class, 'checkBkr'])->name('customers.check-bkr');
 
-// ... en verplaats ze naar binnen de auth groep:
-
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth'])
-    ->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    // Profile routes
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Sales routes
-    Route::resource('products', ProductController::class);
-    Route::resource('customers', CustomerController::class);
-    Route::resource('quotes', QuoteController::class);
-
-    // PLAATS DE BKR ROUTES HIER BINNEN
-    Route::get('/customers/bkr-check', [CustomerController::class, 'bkrCheck'])->name('customers.bkr-check');
-    Route::post('/customers/quick-bkr-check', [CustomerController::class, 'quickBkrCheck'])->name('customers.quick-bkr-check');
-    Route::post('/customers/{customer}/check-bkr', [CustomerController::class, 'checkBkr'])->name('customers.check-bkr');
-
-    // Finance routes
-    Route::resource('invoices', InvoiceController::class);
-
-    // Maintenance routes
-    Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
-
-    // Admin routes
-    Route::get('/users', function () {
-        $users = \App\Models\User::with('department')->get();
-        return view('users.index', compact('users'));
-    })->name('users.index');
-});
-
-// Quote routes - deze kunnen ook binnen auth als ze beveiligd moeten zijn
+// Quote routes
 Route::resource('quotes', QuoteController::class);
 Route::post('/quotes/{quote}/send', [QuoteController::class, 'send'])->name('quotes.send');
 Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
@@ -70,9 +36,12 @@ Route::post('/quotes/{quote}/duplicate', [QuoteController::class, 'duplicate'])-
 Route::get('/quotes/create-for-customer/{customer}', [QuoteController::class, 'createForCustomer'])->name('quotes.create.for.customer');
 Route::get('/maintenance/create-for-customer/{customer}', [MaintenanceController::class, 'createForCustomer'])->name('maintenance.create.for.customer');
 
-// Invoice routes
-Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+// Invoice routes - ZORG DAT DEZE ROUTE BOVENAAN STAAT
+Route::post('/invoices/store-from-quote/{quote}', [InvoiceController::class, 'storeFromQuote'])->name('invoices.store.from.quote');
 Route::get('/invoices/create-from-quote/{quote}', [InvoiceController::class, 'createFromQuote'])->name('invoices.create.from.quote');
+
+// Overige invoice routes
+Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
 Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
 Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
 Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
@@ -97,15 +66,36 @@ Route::get('/check-table', function() {
 Route::resource('products', ProductController::class);
 Route::delete('/products/{product}/image', [ProductController::class, 'deleteImage'])->name('products.deleteImage');
 
+// Dashboard route
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('dashboard');
+
+// Authenticated routes
+Route::middleware('auth')->group(function () {
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Resource routes
+    Route::resource('products', ProductController::class);
+    Route::resource('customers', CustomerController::class);
+    Route::resource('quotes', QuoteController::class);
+    Route::resource('invoices', InvoiceController::class);
+
+    // Admin routes
+    Route::get('/users', function () {
+        $users = \App\Models\User::with('department')->get();
+        return view('users.index', compact('users'));
+    })->name('users.index');
+});
+
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// VERWIJDER DEZE ROUTE
-// Route::view('dashboard', 'dashboard')
-//     ->middleware(['auth', 'verified'])
-//     ->name('dashboard');
-
+// Settings routes
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
