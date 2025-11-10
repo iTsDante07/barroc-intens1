@@ -8,27 +8,50 @@ use Illuminate\Http\Request;
 
 class MaintenanceController extends Controller
 {
-    public function index(Request $request)
+     public function index(Request $request)
     {
-        $filter = $request->get('filter');
+        $statusFilter = $request->get('status');
+        $typeFilter = $request->get('type');
+        $priorityFilter = $request->get('priority');
+        $dateFilter = $request->get('date');
 
         $query = Maintenance::query();
 
-        if ($filter === 'gepland') {
+        if ($statusFilter === 'gepland') {
             $query->where('status', 'gepland')
                 ->where('scheduled_date', '>', now());
-        } elseif ($filter === 'overdue') {
+        } elseif ($statusFilter === 'overdue') {
             $query->where('status', 'gepland')
                 ->where('scheduled_date', '<', now());
-        } elseif ($filter === 'voltooid') {
+        } elseif ($statusFilter === 'voltooid') {
             $query->where('status', 'voltooid');
-        } elseif ($filter === 'in_uitvoering') {
+        } elseif ($statusFilter === 'in_uitvoering') {
             $query->where('status', 'in_uitvoering');
+        } elseif ($statusFilter === 'geannuleerd') {
+            $query->where('status', 'geannuleerd');
+        }
+
+        if ($typeFilter && in_array($typeFilter, ['periodiek', 'reparatie', 'installatie'])) {
+            $query->where('type', $typeFilter);
+        }
+
+        if ($priorityFilter && in_array($priorityFilter, ['laag', 'normaal', 'hoog', 'urgent'])) {
+            $query->where('priority', $priorityFilter);
+        }
+
+        // Date filter
+        if ($dateFilter === 'vandaag') {
+            $query->whereDate('scheduled_date', today());
+        } elseif ($dateFilter === 'deze_week') {
+            $query->whereBetween('scheduled_date', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($dateFilter === 'deze_maand') {
+            $query->whereBetween('scheduled_date', [now()->startOfMonth(), now()->endOfMonth()]);
+        } elseif ($dateFilter === 'aankomende_week') {
+            $query->whereBetween('scheduled_date', [now()->addWeek()->startOfWeek(), now()->addWeek()->endOfWeek()]);
         }
 
         $maintenances = $query->orderBy('scheduled_date', 'desc')->get();
 
-        // tellers voor de bovenste kaarten
         $totalCount = Maintenance::count();
         $completedCount = Maintenance::where('status', 'voltooid')->count();
         $upcomingCount = Maintenance::where('status', 'gepland')
@@ -38,7 +61,10 @@ class MaintenanceController extends Controller
 
         return view('maintenance.index', compact(
             'maintenances',
-            'filter',
+            'statusFilter',
+            'typeFilter',
+            'priorityFilter',
+            'dateFilter',
             'totalCount',
             'completedCount',
             'upcomingCount',
