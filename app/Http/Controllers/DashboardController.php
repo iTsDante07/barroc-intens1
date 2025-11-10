@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -8,6 +9,7 @@ use App\Models\Quote;
 use App\Models\Invoice;
 use App\Models\Maintenance;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -15,133 +17,222 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
+        \Log::info('Dashboard access attempt', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'department_id' => $user->department_id,
+            'department_name' => $user->department ? $user->department->name : 'No department'
+        ]);
+
         if (!$user->department) {
+            \Log::warning('User has no department assigned', ['user_id' => $user->id]);
             return $this->generalDashboard();
         }
 
-        switch($user->department->name) {
-            case 'Sales':
+        // Gebruik zowel naam als ID voor betrouwbaarheid
+        $deptName = strtolower(trim($user->department->name));
+        $deptId = $user->department_id;
+
+        \Log::info('Department check', [
+            'dept_id' => $deptId,
+            'dept_name' => $deptName,
+            'original_name' => $user->department->name
+        ]);
+
+        // Check op zowel naam als ID
+        switch(true) {
+            case $deptName === 'sales' || $deptId === 1:
+                \Log::info('Routing to Sales Dashboard');
                 return $this->salesDashboard();
-            case 'Finance':
+
+            case $deptName === 'finance' || $deptId === 2:
                 return $this->financeDashboard();
-            case 'Maintenance':
+
+            case $deptName === 'maintenance' || $deptId === 3:
                 return $this->maintenanceDashboard();
-            case 'Purchase':
+
+            case $deptName === 'purchase' || $deptId === 4:
                 return $this->purchaseDashboard();
-            case 'Management':
+
+            case $deptName === 'management' || $deptId === 5:
                 return $this->managementDashboard();
-            case 'Customer Service':
+
+            case $deptName === 'customer service' || str_contains($deptName, 'customer'):
                 return $this->customerServiceDashboard();
+
             default:
+                \Log::warning('No specific dashboard found, using general', [
+                    'dept_id' => $deptId,
+                    'dept_name' => $deptName
+                ]);
                 return $this->generalDashboard();
         }
     }
 
     private function generalDashboard()
     {
-        $totalProducts = Product::count();
-        $totalCustomers = Customer::count();
-        $recentProducts = Product::latest()->take(5)->get();
-
-        return view('dashboard.general', compact('totalProducts', 'totalCustomers', 'recentProducts'));
+        return view('dashboard.general', [
+            'totalProducts' => Product::count(),
+            'totalCustomers' => Customer::count(),
+            'totalUsers' => User::count(),
+            'recentProducts' => Product::with('category')->latest()->take(5)->get(),
+            'recentCustomers' => Customer::latest()->take(5)->get(),
+            // Voeg eventueel andere variabelen toe die in de view worden gebruikt
+        ]);
     }
-
     private function salesDashboard()
     {
-        $totalProducts = Product::count();
-        $totalCustomers = Customer::count();
-        $recentQuotes = Quote::with('customer')->latest()->take(5)->get();
-        $pendingQuotes = Quote::where('status', 'pending')->count();
-        $approvedQuotes = Quote::where('status', 'approved')->count();
+        $stats = [
+            'totalProducts' => Product::count(),
+            'totalCustomers' => Customer::count(),
+            'recentQuotes' => Quote::with(['customer', 'products'])->latest()->take(5)->get(),
+            'pendingQuotes' => Quote::where('status', 'pending')->count(),
+            'approvedQuotes' => Quote::where('status', 'approved')->count(),
+            'rejectedQuotes' => Quote::where('status', 'rejected')->count(),
+            'totalQuotes' => Quote::count(),
+            'recentCustomers' => Customer::latest()->take(5)->get(),
+        ];
 
-        return view('dashboard.sales', compact(
-            'totalProducts',
-            'totalCustomers',
-            'recentQuotes',
-            'pendingQuotes',
-            'approvedQuotes'
-        ));
+        // Bereken totale waarde van goedgekeurde offertes
+        $stats['totalQuoteValue'] = Quote::where('status', 'approved')->sum('total_amount');
+
+        return view('dashboard.sales', $stats);
     }
 
     private function financeDashboard()
     {
-        $totalCustomers = Customer::where('bkr_approved', true)->count();
-        $pendingInvoices = Invoice::where('status', 'pending')->count();
-        $paidInvoices = Invoice::where('status', 'paid')->count();
-        $totalRevenue = Invoice::where('status', 'paid')->sum('amount');
-        $recentInvoices = Invoice::with('customer')->latest()->take(5)->get();
+        $stats = [
+            'totalCustomers' => Customer::where('bkr_approved', true)->count(),
+            'pendingInvoices' => Invoice::where('status', 'pending')->count(),
+            'paidInvoices' => Invoice::where('status', 'paid')->count(),
+            'overdueInvoices' => Invoice::where('status', 'pending')
+                                        ->where('due_date', '<', now())
+                                        ->count(),
+            'totalRevenue' => Invoice::where('status', 'paid')->sum('amount'),
+            'recentInvoices' => Invoice::with('customer')->latest()->take(5)->get(),
+            'bkrApproved' => Customer::where('bkr_approved', true)->count(),
+            'bkrPending' => Customer::where('bkr_approved', false)->count(),
+        ];
 
-        return view('dashboard.finance', compact(
-            'totalCustomers',
-            'pendingInvoices',
-            'paidInvoices',
-            'totalRevenue',
-            'recentInvoices'
-        ));
+        return view('dashboard.finance', $stats);
     }
 
     private function maintenanceDashboard()
     {
-        $totalTasks = Maintenance::count();
-        $completedTasks = Maintenance::where('status', 'voltooid')->count();
-        $plannedTasks = Maintenance::where('status', 'gepland')->count();
-        $overdueTasks = Maintenance::where('status', 'gepland')
-            ->where('scheduled_date', '<', now())->count();
-        $recentTasks = Maintenance::with(['customer', 'assignedTechnician'])->latest()->take(5)->get();
+        $stats = [
+            'totalTasks' => Maintenance::count(),
+            'completedTasks' => Maintenance::where('status', 'voltooid')->count(),
+            'plannedTasks' => Maintenance::where('status', 'gepland')->count(),
+            'inProgressTasks' => Maintenance::where('status', 'in_uitvoering')->count(),
+            'overdueTasks' => Maintenance::where('status', 'gepland')
+                                       ->where('scheduled_date', '<', now())
+                                       ->count(),
+            'recentTasks' => Maintenance::with(['customer', 'assignedTechnician'])
+                                      ->latest()
+                                      ->take(5)
+                                      ->get(),
+        ];
 
-        return view('dashboard.maintenance', compact(
-            'totalTasks',
-            'completedTasks',
-            'plannedTasks',
-            'overdueTasks',
-            'recentTasks'
-        ));
+        return view('dashboard.maintenance', $stats);
     }
 
     private function purchaseDashboard()
     {
-        $totalProducts = Product::count();
-        $lowStockProducts = Product::where('stock', '<', 5)->get();
-        $outOfStockProducts = Product::where('stock', 0)->count();
-        $totalStockValue = Product::sum(\DB::raw('price * stock'));
+        $lowStockThreshold = 10;
 
-        return view('dashboard.purchase', compact(
-            'totalProducts',
-            'lowStockProducts',
-            'outOfStockProducts',
-            'totalStockValue'
-        ));
+        $stats = [
+            'totalProducts' => Product::count(),
+            'lowStockProducts' => Product::where('stock', '<', $lowStockThreshold)
+                                        ->where('stock', '>', 0)
+                                        ->get(),
+            'outOfStockProducts' => Product::where('stock', 0)->get(),
+            'totalStockValue' => Product::sum(DB::raw('price * stock')),
+            'lowStockCount' => Product::where('stock', '<', $lowStockThreshold)
+                                     ->where('stock', '>', 0)
+                                     ->count(),
+            'outOfStockCount' => Product::where('stock', 0)->count(),
+            'recentProducts' => Product::latest()->take(5)->get(),
+        ];
+
+        return view('dashboard.purchase', $stats);
     }
 
     private function managementDashboard()
     {
-        $totalUsers = User::count();
-        $totalCustomers = Customer::count();
-        $totalProducts = Product::count();
-        $totalRevenue = Invoice::where('status', 'paid')->sum('amount');
-        $recentActivities = []; // Hier kun je later activity logs toevoegen
+        // Haal de benodigde data op
+        $users = User::with('department')->get();
+        $products = Product::all();
+        $customers = Customer::all();
 
-        return view('dashboard.management', compact(
-            'totalUsers',
-            'totalCustomers',
-            'totalProducts',
-            'totalRevenue',
-            'recentActivities'
-        ));
+        $stats = [
+            'users' => $users,
+            'products' => $products,
+            'customers' => $customers,
+            'totalUsers' => $users->count(),
+            'totalProducts' => $products->count(),
+            'totalCustomers' => $customers->count(),
+            'totalRevenue' => Invoice::where('status', 'paid')->sum('amount'),
+            'totalQuotes' => Quote::count(),
+            'quoteConversionRate' => Quote::count() > 0 ?
+                (Quote::where('status', 'approved')->count() / Quote::count()) * 100 : 0,
+            'recentUsers' => User::with('department')->latest()->take(5)->get(),
+            'departmentStats' => $this->getDepartmentStats(),
+        ];
+
+        return view('dashboard.management', $stats);
     }
 
     private function customerServiceDashboard()
     {
-        $totalCustomers = Customer::count();
-        $recentCustomers = Customer::latest()->take(5)->get();
-        $bkrApproved = Customer::where('bkr_approved', true)->count();
-        $bkrPending = Customer::where('bkr_approved', false)->count();
+        $stats = [
+            'totalCustomers' => Customer::count(),
+            'recentCustomers' => Customer::latest()->take(5)->get(),
+            'bkrApproved' => Customer::where('bkr_approved', true)->count(),
+            'bkrPending' => Customer::where('bkr_approved', false)->count(),
+            'customersWithMaintenance' => Customer::has('maintenances')->count(),
+            'recentMaintenanceRequests' => Maintenance::with('customer')
+                                                    ->latest()
+                                                    ->take(5)
+                                                    ->get(),
+        ];
 
-        return view('dashboard.customer-service', compact(
-            'totalCustomers',
-            'recentCustomers',
-            'bkrApproved',
-            'bkrPending'
-        ));
+        return view('dashboard.customer-service', $stats);
+    }
+
+    private function getDepartmentStats()
+    {
+        return [
+            'sales' => [
+                'users' => User::where('department_id', 1)->count(),
+                'quotes' => Quote::count(),
+            ],
+            'finance' => [
+                'users' => User::where('department_id', 2)->count(),
+                'invoices' => Invoice::count(),
+            ],
+            'maintenance' => [
+                'users' => User::where('department_id', 3)->count(),
+                'tasks' => Maintenance::count(),
+            ],
+            'purchase' => [
+                'users' => User::where('department_id', 4)->count(),
+                'products' => Product::count(),
+            ],
+        ];
+    }
+
+    // API endpoint voor dashboard data (voor toekomstige AJAX calls)
+    public function getDashboardData()
+    {
+        $user = auth()->user();
+
+        return response()->json([
+            'user' => [
+                'name' => $user->name,
+                'department' => $user->department ? $user->department->name : 'Geen',
+                'role' => $user->role,
+            ],
+            'timestamp' => now()->toDateTimeString(),
+        ]);
     }
 }
