@@ -11,17 +11,19 @@ use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MaintenanceController;
 
-
-
 Route::get('/login', function () {
     return view('auth.custom-login');
 })->name('login');
 
+// Maintenance routes
 Route::resource('maintenance', MaintenanceController::class);
 Route::post('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
+
+// BKR routes
 Route::get('/customers/bkr-check', [CustomerController::class, 'bkrCheck'])->name('customers.bkr-check');
 Route::post('/customers/quick-bkr-check', [CustomerController::class, 'quickBkrCheck'])->name('customers.quick-bkr-check');
 Route::post('/customers/{customer}/check-bkr', [CustomerController::class, 'checkBkr'])->name('customers.check-bkr');
+
 // Quote routes
 Route::resource('quotes', QuoteController::class);
 Route::post('/quotes/{quote}/send', [QuoteController::class, 'send'])->name('quotes.send');
@@ -29,60 +31,58 @@ Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name(
 Route::post('/quotes/{quote}/reject', [QuoteController::class, 'reject'])->name('quotes.reject');
 Route::get('/quotes/{quote}/download-pdf', [QuoteController::class, 'downloadPdf'])->name('quotes.download.pdf');
 Route::post('/quotes/{quote}/duplicate', [QuoteController::class, 'duplicate'])->name('quotes.duplicate');
+
 // Snelle acties routes
 Route::get('/quotes/create-for-customer/{customer}', [QuoteController::class, 'createForCustomer'])->name('quotes.create.for.customer');
 Route::get('/maintenance/create-for-customer/{customer}', [MaintenanceController::class, 'createForCustomer'])->name('maintenance.create.for.customer');
-// Invoice routes
-Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+
+// Invoice routes - ZORG DAT DEZE ROUTE BOVENAAN STAAT
+Route::post('/invoices/store-from-quote/{quote}', [InvoiceController::class, 'storeFromQuote'])->name('invoices.store.from.quote');
 Route::get('/invoices/create-from-quote/{quote}', [InvoiceController::class, 'createFromQuote'])->name('invoices.create.from.quote');
+
+// Overige invoice routes
+Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
 Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
 Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
 Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
 Route::post('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid'])->name('invoices.mark.paid');
 Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download.pdf');
 Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])->name('invoices.destroy');
-Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download.pdf');
-// Invoice routes
-Route::get('/invoices/create-from-quote/{quote}', [InvoiceController::class, 'createFromQuote'])->name('invoices.create.from.quote');
-Route::post('/invoices/store-from-quote/{quote}', [InvoiceController::class, 'storeFromQuote'])->name('invoices.store.from.quote');
-Route::resource('invoices', InvoiceController::class)->except(['create', 'store']);
-Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])->name('invoices.send');
-Route::post('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid'])->name('invoices.mark.paid');
-Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download.pdf');
-// maintenance routes
+
+// Maintenance routes
 Route::resource('maintenance', MaintenanceController::class);
 Route::post('/maintenance/{maintenance}/start', [MaintenanceController::class, 'start'])->name('maintenance.start');
 Route::post('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
 Route::post('/maintenance/{maintenance}/cancel', [MaintenanceController::class, 'cancel'])->name('maintenance.cancel');
 Route::post('/maintenance/{maintenance}/technician-notes', [MaintenanceController::class, 'addTechnicianNotes'])->name('maintenance.technician-notes');
 Route::get('/customers/{customer}/maintenance/create', [MaintenanceController::class, 'createForCustomer'])->name('maintenance.create-for-customer');
+
 Route::get('/check-table', function() {
     $columns = Schema::getColumnListing('maintenances');
     dd($columns);
 });
 
+// Product routes
+Route::resource('products', ProductController::class);
+Route::delete('/products/{product}/image', [ProductController::class, 'deleteImage'])->name('products.deleteImage');
 
+// Dashboard route
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard');
 
+// Authenticated routes
 Route::middleware('auth')->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Sales routes
+    // Resource routes
     Route::resource('products', ProductController::class);
     Route::resource('customers', CustomerController::class);
     Route::resource('quotes', QuoteController::class);
-    Route::post('/customers/{customer}/check-bkr', [CustomerController::class, 'checkBkr'])->name('customers.check-bkr');
-
-    // Finance routes
     Route::resource('invoices', InvoiceController::class);
-
-    // Maintenance routes
-    Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
 
     // Admin routes
     Route::get('/users', function () {
@@ -90,51 +90,12 @@ Route::middleware('auth')->group(function () {
         return view('users.index', compact('users'));
     })->name('users.index');
 });
-use Illuminate\Http\Request;
 
-Route::get('/debug-controller', function(Request $request) {
-    $filter = $request->input('filter', 'gepland');
-
-    // Exact dezelfde code als in je controller
-    $query = \App\Models\Maintenance::with(['customer', 'assignedTechnician']);
-
-    if ($filter === 'gepland') {
-        $query->where('status', 'gepland')->where('scheduled_date', '>', now());
-    } elseif ($filter === 'in_uitvoering') {
-        $query->where('status', 'in_uitvoering');
-    } elseif ($filter === 'voltooid') {
-        $query->where('status', 'voltooid');
-    } elseif ($filter === 'overdue') {
-        $query->where('status', 'gepland')->where('scheduled_date', '<', now());
-    }
-
-    $maintenances = $query->orderBy('scheduled_date', 'asc')->get();
-
-    return [
-        'filter_applied' => $filter,
-        'query_sql' => $query->toSql(),
-        'query_bindings' => $query->getBindings(),
-        'results_count' => $maintenances->count(),
-        'expected_count' => $filter === 'gepland' ? 1 : ($filter === 'overdue' ? 1 : 'varies'),
-        'results' => $maintenances->map(function($item) {
-            return [
-                'id' => $item->id,
-                'title' => $item->title,
-                'status' => $item->status,
-                'scheduled_date' => $item->scheduled_date->format('Y-m-d'),
-                'is_future' => $item->scheduled_date->isFuture() ? 'YES' : 'NO'
-            ];
-        })
-    ];
-});
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
+// Settings routes
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 

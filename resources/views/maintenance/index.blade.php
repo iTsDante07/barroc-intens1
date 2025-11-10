@@ -20,6 +20,73 @@
     </a>
 </div>
 
+<!-- Filter Section -->
+<div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <h3 class="text-lg font-semibold text-gray-800">Filters</h3>
+
+        <form method="GET" action="{{ route('maintenance.index') }}" class="flex flex-col md:flex-row gap-4">
+            <!-- Status Filter -->
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" id="status" class="w-full md:w-40 rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <option value="">Alle statussen</option>
+                    <option value="gepland" {{ request('status') == 'gepland' ? 'selected' : '' }}>Gepland</option>
+                    <option value="in_uitvoering" {{ request('status') == 'in_uitvoering' ? 'selected' : '' }}>In Uitvoering</option>
+                    <option value="voltooid" {{ request('status') == 'voltooid' ? 'selected' : '' }}>Voltooid</option>
+                    <option value="geannuleerd" {{ request('status') == 'geannuleerd' ? 'selected' : '' }}>Geannuleerd</option>
+                    <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                </select>
+            </div>
+
+            <!-- Type Filter -->
+            <div>
+                <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select name="type" id="type" class="w-full md:w-40 rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <option value="">Alle types</option>
+                    <option value="periodiek" {{ request('type') == 'periodiek' ? 'selected' : '' }}>Periodiek</option>
+                    <option value="reparatie" {{ request('type') == 'reparatie' ? 'selected' : '' }}>Reparatie</option>
+                    <option value="installatie" {{ request('type') == 'installatie' ? 'selected' : '' }}>Installatie</option>
+                </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div>
+                <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Prioriteit</label>
+                <select name="priority" id="priority" class="w-full md:w-40 rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <option value="">Alle prioriteiten</option>
+                    <option value="urgent" {{ request('priority') == 'urgent' ? 'selected' : '' }}>Urgent</option>
+                    <option value="hoog" {{ request('priority') == 'hoog' ? 'selected' : '' }}>Hoog</option>
+                    <option value="normaal" {{ request('priority') == 'normaal' ? 'selected' : '' }}>Normaal</option>
+                    <option value="laag" {{ request('priority') == 'laag' ? 'selected' : '' }}>Laag</option>
+                </select>
+            </div>
+
+            <!-- Date Filter -->
+            <div>
+                <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+                <select name="date" id="date" class="w-full md:w-40 rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                    <option value="">Alle data</option>
+                    <option value="vandaag" {{ request('date') == 'vandaag' ? 'selected' : '' }}>Vandaag</option>
+                    <option value="deze_week" {{ request('date') == 'deze_week' ? 'selected' : '' }}>Deze week</option>
+                    <option value="deze_maand" {{ request('date') == 'deze_maand' ? 'selected' : '' }}>Deze maand</option>
+                    <option value="aankomende_week" {{ request('date') == 'aankomende_week' ? 'selected' : '' }}>Aankomende week</option>
+                </select>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex items-end gap-2">
+                <button type="submit" class="bg-yellow-500 text-black px-4 py-2 rounded-md font-semibold hover:bg-yellow-600 transition-colors">
+                    Filteren
+                </button>
+                <a href="{{ route('maintenance.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-gray-600 transition-colors">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Statistics -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="bg-white rounded-lg shadow p-6">
@@ -31,7 +98,7 @@
             </div>
             <div class="ml-4">
                 <p class="text-sm font-medium text-gray-600">Totaal</p>
-                <p class="text-2xl font-semibold text-gray-900">{{ $maintenances->count() }}</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ $totalCount }}</p>
             </div>
         </div>
     </div>
@@ -80,46 +147,10 @@
 </div>
 
 @if($maintenances->count() > 0)
-<!-- Filters -->
-<div class="bg-white rounded-lg shadow p-6 mb-6">
-    <div class="flex flex-wrap gap-4">
-        <a href="{{ route('maintenance.index') }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ !request()->has('filter') ? 'bg-yellow-500 text-black font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            Alle
-        </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'gepland']) }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'gepland' ? 'bg-yellow-500 text-black font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            Gepland
-        </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'in_uitvoering']) }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'in_uitvoering' ? 'bg-blue-500 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            In Uitvoering
-        </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'voltooid']) }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'voltooid' ? 'bg-green-500 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            Voltooid
-        </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'overdue']) }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'overdue' ? 'bg-red-500 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            Overdue
-        </a>
-    </div>
-
-    @if(request()->has('filter'))
-    <div class="mt-4 flex items-center text-sm text-gray-600">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
-        </svg>
-        Filter: <span class="ml-1 font-semibold capitalize">{{ request('filter') }}</span>
-        <span class="ml-2 text-gray-500">({{ $maintenances->count() }} taken)</span>
-        <a href="{{ route('maintenance.index') }}" class="ml-4 text-red-600 hover:text-red-800 text-xs">Filter wissen</a>
-    </div>
-    @endif
-</div>
-
 <div class="bg-white rounded-lg shadow overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h2 class="text-xl font-semibold text-gray-800">Onderhoud Overzicht</h2>
+        <span class="text-sm text-gray-500">{{ $maintenances->count() }} taken gevonden</span>
     </div>
 
     <div class="overflow-x-auto">
@@ -203,11 +234,16 @@
     <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
     </svg>
-    <h3 class="text-lg font-medium text-gray-900 mb-2">Nog geen onderhoudstaken</h3>
-    <p class="text-gray-500 mb-4">Plan je eerste onderhoudstaak in om te beginnen.</p>
-    <a href="{{ route('maintenance.create') }}" class="bg-yellow-500 text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
-        Eerste Taak Plannen
-    </a>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">Geen onderhoudstaken gevonden</h3>
+    <p class="text-gray-500 mb-4">Probeer andere filterinstellingen of plan een nieuwe onderhoudstaak.</p>
+    <div class="space-x-2">
+        <a href="{{ route('maintenance.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors">
+            Filters resetten
+        </a>
+        <a href="{{ route('maintenance.create') }}" class="bg-yellow-500 text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
+            Nieuwe Taak
+        </a>
+    </div>
 </div>
 @endif
 @endsection

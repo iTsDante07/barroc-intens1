@@ -5,68 +5,81 @@ use App\Models\Maintenance;
 use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class MaintenanceController extends Controller
 {
-    public function index()
+     public function index(Request $request)
     {
-        try {
-            // Gebruik simplePaginate of get zonder relationships eerst
-            $maintenances = Maintenance::with([
-                'customer:id,company_name', // Specificeer alleen nodig kolommen
-                'assignedTechnician:id,name' // Specificeer alleen nodig kolommen
-            ])->get();
+        $statusFilter = $request->get('status');
+        $typeFilter = $request->get('type');
+        $priorityFilter = $request->get('priority');
+        $dateFilter = $request->get('date');
 
+        $query = Maintenance::query();
 
-            $upcomingCount = Maintenance::where('status', 'gepland')
-                                    ->where('scheduled_date', '>=', now())
-                                    ->count();
-
-            $overdueCount = Maintenance::where('status', 'gepland')
-                                    ->where('scheduled_date', '<', now())
-                                    ->count();
-
-            $completedCount = Maintenance::where('status', 'voltooid')->count();
-
-            return view('maintenance.index', [
-                'maintenances' => $maintenances,
-                'upcomingCount' => $upcomingCount,
-                'overdueCount' => $overdueCount,
-                'completedCount' => $completedCount
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error('Error loading maintenances: ' . $e->getMessage());
-
-            // Fallback: laad zonder relationships
-            $maintenances = Maintenance::all();
-
-            return view('maintenance.index', [
-                'maintenances' => $maintenances,
-                'upcomingCount' => 0,
-                'overdueCount' => 0,
-                'completedCount' => 0
-            ]);
+        if ($statusFilter === 'gepland') {
+            $query->where('status', 'gepland')
+                ->where('scheduled_date', '>', now());
+        } elseif ($statusFilter === 'overdue') {
+            $query->where('status', 'gepland')
+                ->where('scheduled_date', '<', now());
+        } elseif ($statusFilter === 'voltooid') {
+            $query->where('status', 'voltooid');
+        } elseif ($statusFilter === 'in_uitvoering') {
+            $query->where('status', 'in_uitvoering');
+        } elseif ($statusFilter === 'geannuleerd') {
+            $query->where('status', 'geannuleerd');
         }
+
+        if ($typeFilter && in_array($typeFilter, ['periodiek', 'reparatie', 'installatie'])) {
+            $query->where('type', $typeFilter);
+        }
+
+        if ($priorityFilter && in_array($priorityFilter, ['laag', 'normaal', 'hoog', 'urgent'])) {
+            $query->where('priority', $priorityFilter);
+        }
+
+        // Date filter
+        if ($dateFilter === 'vandaag') {
+            $query->whereDate('scheduled_date', today());
+        } elseif ($dateFilter === 'deze_week') {
+            $query->whereBetween('scheduled_date', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($dateFilter === 'deze_maand') {
+            $query->whereBetween('scheduled_date', [now()->startOfMonth(), now()->endOfMonth()]);
+        } elseif ($dateFilter === 'aankomende_week') {
+            $query->whereBetween('scheduled_date', [now()->addWeek()->startOfWeek(), now()->addWeek()->endOfWeek()]);
+        }
+
+        $maintenances = $query->orderBy('scheduled_date', 'desc')->get();
+
+        $totalCount = Maintenance::count();
+        $completedCount = Maintenance::where('status', 'voltooid')->count();
+        $upcomingCount = Maintenance::where('status', 'gepland')
+            ->where('scheduled_date', '>', now())->count();
+        $overdueCount = Maintenance::where('status', 'gepland')
+            ->where('scheduled_date', '<', now())->count();
+
+        return view('maintenance.index', compact(
+            'maintenances',
+            'statusFilter',
+            'typeFilter',
+            'priorityFilter',
+            'dateFilter',
+            'totalCount',
+            'completedCount',
+            'upcomingCount',
+            'overdueCount'
+        ));
     }
+
     public function create()
     {
         $customers = Customer::all();
-        $technicians = User::whereHas('department', function($query) {
-            $query->where('name', 'Maintenance');
-        })->get();
+        $technicians = User::where('department_id',
+            \App\Models\Department::where('name', 'Maintenance')->first()->id
+        )->get();
 
         return view('maintenance.create', compact('customers', 'technicians'));
-    }
-
-    public function createForCustomer(Customer $customer)
-    {
-        $technicians = User::whereHas('department', function($query) {
-            $query->where('name', 'Maintenance');
-        })->get();
-
-        return view('maintenance.create', compact('customer', 'technicians'));
     }
 
     public function store(Request $request)
@@ -76,10 +89,10 @@ class MaintenanceController extends Controller
             'assigned_to' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'type' => 'required|in:periodiek,reparatie,installatie', // verwijder 'onderhoud'
+            'type' => 'required|in:periodiek,reparatie,installatie',
             'priority' => 'required|in:laag,normaal,hoog,urgent',
-            'scheduled_date' => 'required|date|after_or_equal:today',
-            'notes' => 'nullable|string',
+            'scheduled_date' => 'required|date',
+            'notes' => 'nullable|string'
         ]);
 
         Maintenance::create($validated);
@@ -97,9 +110,9 @@ class MaintenanceController extends Controller
     public function edit(Maintenance $maintenance)
     {
         $customers = Customer::all();
-        $technicians = User::whereHas('department', function($query) {
-            $query->where('name', 'Maintenance');
-        })->get();
+        $technicians = User::where('department_id',
+            \App\Models\Department::where('name', 'Maintenance')->first()->id
+        )->get();
 
         return view('maintenance.edit', compact('maintenance', 'customers', 'technicians'));
     }
@@ -111,24 +124,17 @@ class MaintenanceController extends Controller
             'assigned_to' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'type' => 'required|in:periodiek,reparatie,installatie', // verwijder 'onderhoud'
+            'type' => 'required|in:periodiek,reparatie,installatie',
             'priority' => 'required|in:laag,normaal,hoog,urgent',
             'status' => 'required|in:gepland,in_uitvoering,voltooid,geannuleerd',
             'scheduled_date' => 'required|date',
-            'completed_date' => 'nullable|date|required_if:status,voltooid',
-            'notes' => 'nullable|string',
-            'technician_notes' => 'nullable|string',
-            'costs' => 'nullable|numeric|min:0',
+            'completed_date' => 'nullable|date',
+            'notes' => 'nullable|string'
         ]);
-
-        // Als status wordt gewijzigd naar voltooid, zet completed_date
-        if ($validated['status'] === 'voltooid' && empty($validated['completed_date'])) {
-            $validated['completed_date'] = now();
-        }
 
         $maintenance->update($validated);
 
-        return redirect()->route('maintenance.show', $maintenance)
+        return redirect()->route('maintenance.index')
             ->with('success', 'Onderhoudstaak succesvol bijgewerkt!');
     }
 
@@ -140,16 +146,6 @@ class MaintenanceController extends Controller
             ->with('success', 'Onderhoudstaak succesvol verwijderd!');
     }
 
-    public function start(Maintenance $maintenance)
-    {
-        $maintenance->update([
-            'status' => 'in_uitvoering'
-        ]);
-
-        return redirect()->route('maintenance.show', $maintenance)
-            ->with('success', 'Onderhoudstaak gestart!');
-    }
-
     public function complete(Maintenance $maintenance)
     {
         $maintenance->update([
@@ -158,29 +154,15 @@ class MaintenanceController extends Controller
         ]);
 
         return redirect()->route('maintenance.show', $maintenance)
-            ->with('success', 'Onderhoudstaak voltooid!');
+            ->with('success', 'Onderhoudstaak gemarkeerd als voltooid!');
     }
 
-    public function cancel(Maintenance $maintenance)
+    public function createForCustomer(Customer $customer)
     {
-        $maintenance->update([
-            'status' => 'geannuleerd'
-        ]);
+        $technicians = User::where('department_id',
+            \App\Models\Department::where('name', 'Maintenance')->first()->id
+        )->get();
 
-        return redirect()->route('maintenance.show', $maintenance)
-            ->with('success', 'Onderhoudstaak geannuleerd!');
-    }
-
-    public function addTechnicianNotes(Request $request, Maintenance $maintenance)
-    {
-        $validated = $request->validate([
-            'technician_notes' => 'required|string',
-            'costs' => 'nullable|numeric|min:0'
-        ]);
-
-        $maintenance->update($validated);
-
-        return redirect()->route('maintenance.show', $maintenance)
-            ->with('success', 'Technician notities toegevoegd!');
+        return view('maintenance.create', compact('customer', 'technicians'));
     }
 }
