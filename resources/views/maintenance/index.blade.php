@@ -80,43 +80,6 @@
 </div>
 
 @if($maintenances->count() > 0)
-<!-- Filters -->
-<div class="bg-white rounded-lg shadow p-6 mb-6">
-    <div class="flex flex-wrap gap-4">
-        <a href="{{ route('maintenance.index') }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ !request()->has('filter') ? 'bg-yellow-500 text-black font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            Alle
-        </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'gepland']) }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'gepland' ? 'bg-yellow-500 text-black font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            Gepland
-        </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'in_uitvoering']) }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'in_uitvoering' ? 'bg-blue-500 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            In Uitvoering
-        </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'voltooid']) }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'voltooid' ? 'bg-green-500 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            Voltooid
-        </a>
-        <a href="{{ route('maintenance.index', ['filter' => 'overdue']) }}"
-           class="px-4 py-2 rounded-lg transition-colors {{ request('filter') == 'overdue' ? 'bg-red-500 text-white font-semibold' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
-            Overdue
-        </a>
-    </div>
-
-    @if(request()->has('filter'))
-    <div class="mt-4 flex items-center text-sm text-gray-600">
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
-        </svg>
-        Filter: <span class="ml-1 font-semibold capitalize">{{ request('filter') }}</span>
-        <span class="ml-2 text-gray-500">({{ $maintenances->count() }} taken)</span>
-        <a href="{{ route('maintenance.index') }}" class="ml-4 text-red-600 hover:text-red-800 text-xs">Filter wissen</a>
-    </div>
-    @endif
-</div>
-
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-xl font-semibold text-gray-800">Onderhoud Overzicht</h2>
