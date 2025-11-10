@@ -68,13 +68,14 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return redirect()->route('products.index')
+        return redirect()->route('products.show', $product)
             ->with('success', 'Product succesvol bijgewerkt!');
     }
 
     public function destroy(Product $product)
     {
-        if ($product->image) {
+        // Verwijder afbeelding als die bestaat
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
             Storage::disk('public')->delete($product->image);
         }
 
@@ -83,4 +84,19 @@ class ProductController extends Controller
         return redirect()->route('products.index')
             ->with('success', 'Product succesvol verwijderd!');
     }
-}   
+
+    // Nieuwe methode om alleen de afbeelding te verwijderen
+    public function deleteImage(Product $product)
+    {
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
+            $product->update(['image' => null]);
+
+            return redirect()->route('products.show', $product)
+                ->with('success', 'Afbeelding succesvol verwijderd!');
+        }
+
+        return redirect()->route('products.show', $product)
+            ->with('warning', 'Geen afbeelding gevonden om te verwijderen.');
+    }
+}

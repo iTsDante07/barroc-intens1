@@ -60,6 +60,9 @@ Route::get('/check-table', function() {
     $columns = Schema::getColumnListing('maintenances');
     dd($columns);
 });
+// Product routes
+Route::resource('products', ProductController::class);
+Route::delete('/products/{product}/image', [ProductController::class, 'deleteImage'])->name('products.deleteImage');
 
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -90,43 +93,8 @@ Route::middleware('auth')->group(function () {
         return view('users.index', compact('users'));
     })->name('users.index');
 });
-use Illuminate\Http\Request;
 
-Route::get('/debug-controller', function(Request $request) {
-    $filter = $request->input('filter', 'gepland');
 
-    // Exact dezelfde code als in je controller
-    $query = \App\Models\Maintenance::with(['customer', 'assignedTechnician']);
-
-    if ($filter === 'gepland') {
-        $query->where('status', 'gepland')->where('scheduled_date', '>', now());
-    } elseif ($filter === 'in_uitvoering') {
-        $query->where('status', 'in_uitvoering');
-    } elseif ($filter === 'voltooid') {
-        $query->where('status', 'voltooid');
-    } elseif ($filter === 'overdue') {
-        $query->where('status', 'gepland')->where('scheduled_date', '<', now());
-    }
-
-    $maintenances = $query->orderBy('scheduled_date', 'asc')->get();
-
-    return [
-        'filter_applied' => $filter,
-        'query_sql' => $query->toSql(),
-        'query_bindings' => $query->getBindings(),
-        'results_count' => $maintenances->count(),
-        'expected_count' => $filter === 'gepland' ? 1 : ($filter === 'overdue' ? 1 : 'varies'),
-        'results' => $maintenances->map(function($item) {
-            return [
-                'id' => $item->id,
-                'title' => $item->title,
-                'status' => $item->status,
-                'scheduled_date' => $item->scheduled_date->format('Y-m-d'),
-                'is_future' => $item->scheduled_date->isFuture() ? 'YES' : 'NO'
-            ];
-        })
-    ];
-});
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
