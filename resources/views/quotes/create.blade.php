@@ -1,22 +1,41 @@
 @extends('components.layouts.app')
 
-@section('title', 'Nieuwe Offerte - Barroc Intens')
+@section('title', 'Nieuwe Offerte - ' . $customer->company_name)
 
 @section('content')
 <div class="mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Nieuwe Offerte</h1>
-    <p class="text-gray-600">Maak een nieuwe offerte voor een klant</p>
+    <p class="text-gray-600">Voor {{ $customer->company_name }}</p>
 </div>
 
 <div class="bg-white rounded-lg shadow p-6">
-    <form action="{{ route('quotes.store') }}" method="POST" id="quoteForm">
+    <form action="{{ route('quotes.store.for.customer', $customer) }}" method="POST" id="quoteForm">
         @csrf
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Klant Selectie -->
+            <!-- Klantgegevens -->
             <div>
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Klant Selectie</h2>
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Klantgegevens</h2>
 
+<<<<<<< HEAD
+                <div class="mb-6 space-y-2 text-sm">
+                    <div>
+                        <span class="text-gray-600">Bedrijf:</span>
+                        <p class="font-medium text-gray-900">{{ $customer->company_name }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Contactpersoon:</span>
+                        <p>{{ $customer->contact_name }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">E-mail:</span>
+                        <p>{{ $customer->email }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Adres:</span>
+                        <p>{{ $customer->address }}, {{ $customer->postal_code }} {{ $customer->city }}</p>
+                    </div>
+=======
                 <div class="mb-6">
                     <label for="customer_id" class="block text-sm font-medium text-gray-700">Klant *</label>
                     <select name="customer_id" id="customer_id" required
@@ -29,13 +48,15 @@
                         @endforeach
                     </select>
                     <div id="customer-address" class="mt-2 text-sm text-gray-600 hidden"></div>
+>>>>>>> 3f8fd546cf68692f62c581c91c107ffa63534a71
                 </div>
 
                 <!-- Geldig tot -->
                 <div class="mb-6">
                     <label for="valid_until" class="block text-sm font-medium text-gray-700">Geldig tot *</label>
-                    <input type="date" name="valid_until" id="valid_until" required
-                           min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                    <input type="date" name="valid_until" id="valid_until"
+                           value="{{ old('valid_until', now()->addDays(30)->format('Y-m-d')) }}"
+                           required
                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
                 </div>
 
@@ -44,15 +65,7 @@
                     <label for="notes" class="block text-sm font-medium text-gray-700">Notities</label>
                     <textarea name="notes" id="notes" rows="3"
                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50"
-                              placeholder="Optionele notities voor de offerte..."></textarea>
-                </div>
-
-                <!-- Algemene Voorwaarden -->
-                <div class="mb-6">
-                    <label for="terms" class="block text-sm font-medium text-gray-700">Algemene Voorwaarden</label>
-                    <textarea name="terms" id="terms" rows="4"
-                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50"
-                              placeholder="Standaard betalingsvoorwaarden: 30 dagen netto.">Standaard betalingsvoorwaarden: 30 dagen netto.</textarea>
+                              placeholder="Optionele notities voor de offerte...">{{ old('notes') }}</textarea>
                 </div>
             </div>
 
@@ -61,7 +74,7 @@
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Producten</h2>
 
                 <div id="products-container">
-                    <!-- Producten worden hier dynamisch toegevoegd -->
+                    <!-- Dynamische productvelden -->
                 </div>
 
                 <!-- Product Toevoegen -->
@@ -107,7 +120,7 @@
 
         <!-- Buttons -->
         <div class="mt-8 flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <a href="{{ route('quotes.index') }}" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
+            <a href="{{ route('customers.show', $customer) }}" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
                 Annuleren
             </a>
             <button type="submit" class="bg-yellow-500 text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
@@ -117,7 +130,7 @@
     </form>
 </div>
 
-<!-- Product Template (Hidden) -->
+<!-- Product Template -->
 <template id="product-template">
     <div class="product-item border border-gray-200 rounded-lg p-4 mb-4">
         <div class="flex justify-between items-start mb-2">
@@ -150,35 +163,16 @@
     </div>
 </template>
 
-{{-- ... bestaande HTML code ... --}}
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const productsContainer = document.getElementById('products-container');
     const productSelect = document.getElementById('product_select');
     const addProductBtn = document.getElementById('add-product');
     const productTemplate = document.getElementById('product-template');
-    const customerSelect = document.getElementById('customer_id');
-    const customerAddress = document.getElementById('customer-address');
 
     let productCounter = 0;
     const addedProducts = new Set();
 
-    // Toon klant adres
-    if (customerSelect && customerAddress) {
-        customerSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const address = selectedOption.getAttribute('data-address');
-            if (address) {
-                customerAddress.textContent = address;
-                customerAddress.classList.remove('hidden');
-            } else {
-                customerAddress.classList.add('hidden');
-            }
-        });
-    }
-
-    // Voeg product toe
     if (addProductBtn && productSelect) {
         addProductBtn.addEventListener('click', function() {
             const selectedOption = productSelect.options[productSelect.selectedIndex];
@@ -199,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const productClone = productTemplate.content.cloneNode(true);
             const productElement = productClone.querySelector('.product-item');
 
-            // Vul de template
+            // Vul de velden
             productElement.querySelector('.product-name').textContent = productName;
             productElement.querySelector('.product-price').textContent = `€${parseFloat(productPrice).toFixed(2).replace('.', ',')} per stuk`;
             productElement.querySelector('.unit-price-input').value = `€${parseFloat(productPrice).toFixed(2).replace('.', ',')}`;
@@ -212,9 +206,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 addedProducts.delete(parseInt(productId));
                 productElement.remove();
                 calculateTotals();
+                updateFormValidation();
             });
 
-            // Quantity change
+            // Aantal wijziging
             const quantityInput = productElement.querySelector('.quantity-input');
             const totalPriceInput = productElement.querySelector('.total-price-input');
             const unitPrice = parseFloat(productPrice);
@@ -228,71 +223,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
             quantityInput.addEventListener('input', updateProductTotal);
             quantityInput.addEventListener('change', updateProductTotal);
-
-            // Initial calculation
             updateProductTotal();
 
             productsContainer.appendChild(productElement);
             addedProducts.add(parseInt(productId));
             productCounter++;
-
-            // Reset select
             productSelect.selectedIndex = 0;
-
-            // Update form validation
             updateFormValidation();
         });
     }
 
-    // Bereken totalen
+    // Totaal berekening
     function calculateTotals() {
         let subtotal = 0;
-
         document.querySelectorAll('.product-item').forEach(item => {
             const totalPriceText = item.querySelector('.total-price-input').value;
             const totalPrice = parseFloat(totalPriceText.replace('€', '').replace(',', '.')) || 0;
             subtotal += totalPrice;
         });
-
         const vat = subtotal * 0.21;
         const total = subtotal + vat;
-
-        const subtotalElement = document.getElementById('subtotal');
-        const vatElement = document.getElementById('vat');
-        const totalElement = document.getElementById('total');
-
-        if (subtotalElement) subtotalElement.textContent = `€${subtotal.toFixed(2).replace('.', ',')}`;
-        if (vatElement) vatElement.textContent = `€${vat.toFixed(2).replace('.', ',')}`;
-        if (totalElement) totalElement.textContent = `€${total.toFixed(2).replace('.', ',')}`;
+        document.getElementById('subtotal').textContent = `€${subtotal.toFixed(2).replace('.', ',')}`;
+        document.getElementById('vat').textContent = `€${vat.toFixed(2).replace('.', ',')}`;
+        document.getElementById('total').textContent = `€${total.toFixed(2).replace('.', ',')}`;
     }
 
-    // Form validation
     function updateFormValidation() {
         const submitButton = document.querySelector('button[type="submit"]');
-        if (submitButton) {
-            submitButton.disabled = addedProducts.size === 0;
+        submitButton.disabled = addedProducts.size === 0;
+    }
+
+    document.getElementById('quoteForm').addEventListener('submit', function(e) {
+        if (addedProducts.size === 0) {
+            e.preventDefault();
+            alert('Voeg minimaal één product toe aan de offerte');
         }
-    }
-
-    const quoteForm = document.getElementById('quoteForm');
-    if (quoteForm) {
-        quoteForm.addEventListener('submit', function(e) {
-            if (addedProducts.size === 0) {
-                e.preventDefault();
-                alert('Voeg minimaal één product toe aan de offerte');
-                return;
-            }
-
-            if (customerSelect && !customerSelect.value) {
-                e.preventDefault();
-                alert('Selecteer een klant');
-                return;
-            }
-        });
-    }
-
-    // Initial form validation
-    updateFormValidation();
+    });
 });
 </script>
 @endsection
