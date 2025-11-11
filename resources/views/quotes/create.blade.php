@@ -17,6 +17,7 @@
             <div>
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Klantgegevens</h2>
 
+<<<<<<< HEAD
                 <div class="mb-6 space-y-2 text-sm">
                     <div>
                         <span class="text-gray-600">Bedrijf:</span>
@@ -34,6 +35,20 @@
                         <span class="text-gray-600">Adres:</span>
                         <p>{{ $customer->address }}, {{ $customer->postal_code }} {{ $customer->city }}</p>
                     </div>
+=======
+                <div class="mb-6">
+                    <label for="customer_id" class="block text-sm font-medium text-gray-700">Klant *</label>
+                    <select name="customer_id" id="customer_id" required
+                            class="mt-1 block w-full border-yellow-400 rounded-md shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-400 focus:ring-opacity-50">
+                        <option value="">Selecteer een klant</option>
+                        @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}" data-address="{{ $customer->address }}, {{ $customer->postal_code }} {{ $customer->city }}">
+                                {{ $customer->company_name }} - {{ $customer->contact_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div id="customer-address" class="mt-2 text-sm text-gray-600 hidden"></div>
+>>>>>>> 3f8fd546cf68692f62c581c91c107ffa63534a71
                 </div>
 
                 <!-- Geldig tot -->
