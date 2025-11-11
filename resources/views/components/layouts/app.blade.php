@@ -15,12 +15,10 @@
 <body class="bg-gray-100">
     <!-- Navigation -->
     <nav class="bg-black text-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
+        <div class="max-w-7xl px-4 ml-16">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center space-x-4">
-                    <div class="w-8 h-8 bg-barroc-yellow rounded-full flex items-center justify-center">
-                        <span class="text-black font-bold">B</span>
-                    </div>
+                    <img src="{{ asset('images/Logo6_groot.png') }}" alt="Barroc Intens" class="w-12 h-12" />
                     <a href="{{ route('dashboard') }}" class="text-barroc-yellow font-bold text-xl hover:text-yellow-400 transition-colors">
                         BARROC INTENS
                     </a>
