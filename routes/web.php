@@ -10,6 +10,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\UserController;
 
 Route::get('/login', function () {
     return view('auth.custom-login');
@@ -89,6 +90,9 @@ Route::middleware('auth')->group(function () {
         $users = \App\Models\User::with('department')->get();
         return view('users.index', compact('users'));
     })->name('users.index');
+
+    // User management actions
+    Route::post('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update.role');
 });
 
 Route::get('/', function () {
