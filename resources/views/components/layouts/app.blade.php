@@ -15,12 +15,10 @@
 <body class="bg-gray-100">
     <!-- Navigation -->
     <nav class="bg-black text-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
+        <div class="max-w-7xl px-4 ml-16">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center space-x-4">
-                    <div class="w-8 h-8 bg-barroc-yellow rounded-full flex items-center justify-center">
-                        <span class="text-black font-bold">B</span>
-                    </div>
+                    <img src="{{ asset('images/Logo6_groot.png') }}" alt="Barroc Intens" class="w-12 h-12" />
                     <a href="{{ route('dashboard') }}" class="text-barroc-yellow font-bold text-xl hover:text-yellow-400 transition-colors">
                         BARROC INTENS
                     </a>
@@ -59,10 +57,10 @@
                 <!-- Sales Links -->
                 @if(auth()->user()->department && (auth()->user()->department->name === 'Sales' || auth()->user()->isManager() || auth()->user()->isAdmin()))
                 <div class="px-4 py-2 text-gray-500 text-sm font-bold">SALES</div>
-                <a href="{{ route('products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('products.*') ? 'bg-barroc-yellow text-black' : '' }}">
+                <a href="{{ route('products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('products.index') ? 'bg-barroc-yellow text-black' : '' }}">
                     📦 Producten
                 </a>
-                <a href="{{ route('customers.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('customers.*') ? 'bg-barroc-yellow text-black' : '' }}">
+                <a href="{{ route('customers.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('customers.index') ? 'bg-barroc-yellow text-black' : '' }}">
                     👥 Klanten
                 </a>
                 <a href="{{ route('customers.bkr-check') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('customers.bkr-check') ? 'bg-barroc-yellow text-black' : '' }}">
