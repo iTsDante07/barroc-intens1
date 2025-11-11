@@ -36,11 +36,9 @@ Route::post('/quotes/{quote}/duplicate', [QuoteController::class, 'duplicate'])-
 Route::get('/quotes/create-for-customer/{customer}', [QuoteController::class, 'createForCustomer'])->name('quotes.create.for.customer');
 Route::get('/maintenance/create-for-customer/{customer}', [MaintenanceController::class, 'createForCustomer'])->name('maintenance.create.for.customer');
 
-// Invoice routes - ZORG DAT DEZE ROUTE BOVENAAN STAAT
+// Invoice routes
 Route::post('/invoices/store-from-quote/{quote}', [InvoiceController::class, 'storeFromQuote'])->name('invoices.store.from.quote');
 Route::get('/invoices/create-from-quote/{quote}', [InvoiceController::class, 'createFromQuote'])->name('invoices.create.from.quote');
-
-// Overige invoice routes
 Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
 Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
 Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
@@ -70,6 +68,9 @@ Route::delete('/products/{product}/image', [ProductController::class, 'deleteIma
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard');
+
+
+Route::post('/quotes/store-for-customer/{customer}', [QuoteController::class, 'storeForCustomer'])->name('quotes.store.for.customer');
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {
