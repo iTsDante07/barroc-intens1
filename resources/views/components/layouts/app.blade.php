@@ -86,12 +86,17 @@
                     🔧 Onderhoud
                 </a>
                 @endif
-
                 <!-- Purchase Links -->
-                @if(auth()->user()->department && (auth()->user()->department->name === 'Sales' || auth()->user()->isManager() || auth()->user()->isAdmin()))
-                <div class="px-4 py-2 text-gray-500 text-sm font-bold">SALES</div>
-                <a href="{{ route('products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('products.*') ? 'bg-barroc-yellow text-black' : '' }}">
-                    📊 Inkoop
+                @if(auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin']))
+                <div class="px-4 py-2 text-gray-500 text-sm font-bold">INKOOP</div>
+                <a href="{{ route('inkoop.products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.products.*') ? 'bg-barroc-yellow text-black' : '' }}">
+                    📦 Producten Beheer
+                </a>
+                <a href="{{ route('inkoop.purchase-orders.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.purchase-orders.*') ? 'bg-barroc-yellow text-black' : '' }}">
+                    📋 Inkooporders
+                </a>
+                <a href="{{ route('inkoop.products.low-stock') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.products.low-stock') ? 'bg-barroc-yellow text-black' : '' }}">
+                    ⚠️ Lage Voorraad
                 </a>
                 @endif
 
