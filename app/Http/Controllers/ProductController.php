@@ -7,15 +7,24 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::all();
-        return view('products.index', compact('products'));
+        $categories = Product::CATEGORIES;
+
+        $products = Product::query()
+            ->byCategory($request->category)
+            ->search($request->search)
+            ->byStockStatus($request->stock_status)
+            ->orderBy('name')
+            ->get();
+
+        return view('products.index', compact('products', 'categories'));
     }
 
     public function create()
     {
-        return view('products.create');
+        $categories = Product::CATEGORIES;
+        return view('products.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -25,6 +34,8 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'min_stock' => 'required|integer|min:0',
+            'category' => 'required|string|in:' . implode(',', array_keys(Product::CATEGORIES)),
             'image' => 'nullable|image|max:2048',
         ]);
 
@@ -45,7 +56,8 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        return view('products.edit', compact('product'));
+        $categories = Product::CATEGORIES;
+        return view('products.edit', compact('product', 'categories'));
     }
 
     public function update(Request $request, Product $product)
@@ -55,6 +67,8 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
+            'min_stock' => 'required|integer|min:0',
+            'category' => 'required|string|in:' . implode(',', array_keys(Product::CATEGORIES)),
             'image' => 'nullable|image|max:2048',
         ]);
 

@@ -15,34 +15,66 @@ class Product extends Model
         'price',
         'stock',
         'min_stock',
-        'sku',
-        'brand',
         'category',
-        'is_visible_to_customers',
-        'is_visible_to_maintenance',
         'image'
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
-        'is_visible_to_customers' => 'boolean',
-        'is_visible_to_maintenance' => 'boolean'
     ];
+
+    // Categorie constanten
+    const CATEGORIES = [
+        'koffiemachines' => 'Koffiemachines',
+        'koffiebonen' => 'Koffiebonen',
+        'accessoires' => 'Accessoires',
+        'onderdelen' => 'Onderdelen',
+        'overig' => 'Overig'
+    ];
+
+    // Scope voor actieve producten
+    public function scopeActive($query)
+    {
+        return $query->where('stock', '>', 0);
+    }
+
+    // Scope voor filtering op categorie
+    public function scopeByCategory($query, $category)
+    {
+        if ($category && $category !== 'alle') {
+            return $query->where('category', $category);
+        }
+        return $query;
+    }
+
+    // Scope voor zoeken
+    public function scopeSearch($query, $search)
+    {
+        if ($search) {
+            return $query->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%");
+        }
+        return $query;
+    }
+
+    // Scope voor voorraad status
+    public function scopeByStockStatus($query, $status)
+    {
+        switch ($status) {
+            case 'op_voorraad':
+                return $query->where('stock', '>', 10);
+            case 'lage_voorraad':
+                return $query->whereBetween('stock', [1, 10]);
+            case 'uit_voorraad':
+                return $query->where('stock', 0);
+            default:
+                return $query;
+        }
+    }
 
     public function purchaseOrderItems()
     {
         return $this->hasMany(PurchaseOrderItem::class);
-    }
-
-    // Scopes voor filtering
-    public function scopeVisibleToCustomers($query)
-    {
-        return $query->where('is_visible_to_customers', true);
-    }
-
-    public function scopeVisibleToMaintenance($query)
-    {
-        return $query->where('is_visible_to_maintenance', true);
     }
 
     // Accessor voor stock status
@@ -54,6 +86,18 @@ class Product extends Model
             return 'Lage voorraad';
         } else {
             return 'Momenteel leverbaar';
+        }
+    }
+
+    // Accessor voor stock status kleur
+    public function getStockStatusColorAttribute()
+    {
+        if ($this->stock <= 0) {
+            return 'red';
+        } elseif ($this->stock <= $this->min_stock) {
+            return 'orange';
+        } else {
+            return 'green';
         }
     }
 }
