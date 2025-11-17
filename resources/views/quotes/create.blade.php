@@ -1,15 +1,15 @@
 @extends('components.layouts.app')
 
-@section('title', 'Nieuwe Offerte - ' . $customer->company_name)
+@section('title', 'Nieuwe Offerte')
 
 @section('content')
 <div class="mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Nieuwe Offerte</h1>
-    <p class="text-gray-600">Voor {{ $customer->company_name }}</p>
+    <p class="text-gray-600">Selecteer een klant en voeg producten toe</p>
 </div>
 
 <div class="bg-white rounded-lg shadow p-6">
-    <form action="{{ route('quotes.store.for.customer', $customer) }}" method="POST" id="quoteForm">
+    <form action="{{ route('quotes.store') }}" method="POST" id="quoteForm">
         @csrf
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -17,25 +17,6 @@
             <div>
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Klantgegevens</h2>
 
-<<<<<<< HEAD
-                <div class="mb-6 space-y-2 text-sm">
-                    <div>
-                        <span class="text-gray-600">Bedrijf:</span>
-                        <p class="font-medium text-gray-900">{{ $customer->company_name }}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Contactpersoon:</span>
-                        <p>{{ $customer->contact_name }}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">E-mail:</span>
-                        <p>{{ $customer->email }}</p>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Adres:</span>
-                        <p>{{ $customer->address }}, {{ $customer->postal_code }} {{ $customer->city }}</p>
-                    </div>
-=======
                 <div class="mb-6">
                     <label for="customer_id" class="block text-sm font-medium text-gray-700">Klant *</label>
                     <select name="customer_id" id="customer_id" required
@@ -48,7 +29,6 @@
                         @endforeach
                     </select>
                     <div id="customer-address" class="mt-2 text-sm text-gray-600 hidden"></div>
->>>>>>> 3f8fd546cf68692f62c581c91c107ffa63534a71
                 </div>
 
                 <!-- Geldig tot -->
@@ -120,7 +100,7 @@
 
         <!-- Buttons -->
         <div class="mt-8 flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <a href="{{ route('customers.show', $customer) }}" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
+            <a href="{{ route('quotes.index') }}" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
                 Annuleren
             </a>
             <button type="submit" class="bg-yellow-500 text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
