@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\DashboardController;
@@ -57,7 +58,7 @@ Route::post('/maintenance/{maintenance}/cancel', [MaintenanceController::class, 
 Route::post('/maintenance/{maintenance}/technician-notes', [MaintenanceController::class, 'addTechnicianNotes'])->name('maintenance.technician-notes');
 Route::get('/customers/{customer}/maintenance/create', [MaintenanceController::class, 'createForCustomer'])->name('maintenance.create-for-customer');
 
-Route::get('/check-table', function() {
+Route::get('/check-table', function () {
     $columns = Schema::getColumnListing('maintenances');
     dd($columns);
 });
@@ -74,9 +75,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 // Authenticated routes
 Route::middleware('auth')->group(function () {
     // Profile routes
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Resource routes
     Route::resource('products', ProductController::class);
@@ -115,4 +116,4 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
