@@ -13,6 +13,7 @@ use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\Inkoop\ProductController as InkoopProductController;
 use App\Http\Controllers\Inkoop\PurchaseOrderController;
 use App\Http\Controllers\Inkoop\NotificationController;
+use App\Http\Controllers\UserController;
 
 Route::get('/login', function () {
     return view('auth.custom-login');
@@ -87,6 +88,10 @@ Route::middleware('auth')->group(function () {
         $users = \App\Models\User::with('department')->get();
         return view('users.index', compact('users'));
     })->name('users.index');
+
+    // User management actions
+    Route::post('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update.role');
+});
 
         // Inkoop Routes
      Route::prefix('inkoop')->name('inkoop.')->group(function () {
