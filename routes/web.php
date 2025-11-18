@@ -26,6 +26,7 @@ Route::get('/', function () {
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
+
 // Authenticated routes
 Route::middleware('auth')->group(function () {
     // Dashboard
@@ -88,7 +89,7 @@ Route::middleware('auth')->group(function () {
     })->name('users.index');
 
         // Inkoop Routes
-        Route::prefix('inkoop')->name('inkoop.')->group(function () {
+     Route::prefix('inkoop')->name('inkoop.')->group(function () {
             // Producten beheer
             Route::get('/products', [InkoopProductController::class, 'index'])->name('products.index');
             Route::get('/products/create', [InkoopProductController::class, 'create'])->name('products.create');

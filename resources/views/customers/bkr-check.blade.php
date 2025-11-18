@@ -9,7 +9,6 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-    <!-- Statistieken -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
             <div class="p-3 rounded-full bg-green-500 text-white">
@@ -52,8 +51,6 @@
         </div>
     </div>
 </div>
-
-<!-- BKR Check Form -->
 <div class="bg-white rounded-lg shadow p-6 mb-6">
     <h2 class="text-xl font-semibold text-gray-800 mb-4">Snelle BKR Check</h2>
     <form action="{{ route('customers.quick-bkr-check') }}" method="POST">
@@ -78,7 +75,6 @@
     </form>
 </div>
 
-<!-- Klanten die BKR check nodig hebben -->
 <div class="bg-white rounded-lg shadow">
     <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-xl font-semibold text-gray-800">Klanten die BKR check nodig hebben</h2>

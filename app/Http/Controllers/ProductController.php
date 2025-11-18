@@ -9,22 +9,44 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = Product::CATEGORIES;
+        $query = Product::query();
 
-        $products = Product::query()
-            ->byCategory($request->category)
-            ->search($request->search)
-            ->byStockStatus($request->stock_status)
-            ->orderBy('name')
-            ->get();
+        // Zoekfunctionaliteit
+        if ($request->has('search') && $request->search != '') {
+            $query->search($request->search);
+        }
 
-        return view('products.index', compact('products', 'categories'));
+        // Categorie filter
+        if ($request->has('category') && $request->category != '') {
+            $query->byCategory($request->category);
+        }
+
+        // Voorraad status filter
+        if ($request->has('stock_status') && $request->stock_status != '') {
+            $query->byStockStatus($request->stock_status);
+        }
+
+        // Sortering (optioneel - toegevoegd voor betere UX)
+        $sort = $request->get('sort', 'name');
+        $direction = $request->get('direction', 'asc');
+
+        $validSorts = ['name', 'price', 'stock', 'created_at'];
+        $validDirections = ['asc', 'desc'];
+
+        if (in_array($sort, $validSorts) && in_array($direction, $validDirections)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name');
+        }
+
+        $products = $query->paginate(12)->withQueryString();
+
+        return view('products.index', compact('products'));
     }
 
     public function create()
     {
-        $categories = Product::CATEGORIES;
-        return view('products.create', compact('categories'));
+        return view('products.create');
     }
 
     public function store(Request $request)
@@ -34,8 +56,6 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'min_stock' => 'required|integer|min:0',
-            'category' => 'required|string|in:' . implode(',', array_keys(Product::CATEGORIES)),
             'image' => 'nullable|image|max:2048',
         ]);
 
@@ -56,8 +76,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $categories = Product::CATEGORIES;
-        return view('products.edit', compact('product', 'categories'));
+        return view('products.edit', compact('product'));
     }
 
     public function update(Request $request, Product $product)
@@ -67,8 +86,6 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'min_stock' => 'required|integer|min:0',
-            'category' => 'required|string|in:' . implode(',', array_keys(Product::CATEGORIES)),
             'image' => 'nullable|image|max:2048',
         ]);
 
