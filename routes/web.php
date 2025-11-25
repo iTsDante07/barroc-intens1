@@ -13,7 +13,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\Inkoop\ProductController as InkoopProductController;
 use App\Http\Controllers\Inkoop\PurchaseOrderController;
-use App\Http\Controllers\Inkoop\NotificationController;
+// use App\Http\Controllers\Inkoop\NotificationController;
 use App\Http\Controllers\UserController;
 
 Route::get('/login', function () {
@@ -115,8 +115,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
 
         // Meldingen
-        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-        Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        // Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        // Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     });
 });
 

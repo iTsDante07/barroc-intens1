@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Inkoop;
 
 use App\Models\PurchaseOrder;
 use App\Models\Product;
