@@ -8,10 +8,68 @@ use Illuminate\Http\Request;
 
 class MaintenanceController extends Controller
 {
-    public function index()
+     public function index(Request $request)
     {
-        $maintenances = Maintenance::with(['customer', 'assignedTechnician'])->get();
-        return view('maintenance.index', compact('maintenances'));
+        $statusFilter = $request->get('status');
+        $typeFilter = $request->get('type');
+        $priorityFilter = $request->get('priority');
+        $dateFilter = $request->get('date');
+
+        $query = Maintenance::query();
+
+        if ($statusFilter === 'gepland') {
+            $query->where('status', 'gepland')
+                ->where('scheduled_date', '>', now());
+        } elseif ($statusFilter === 'overdue') {
+            $query->where('status', 'gepland')
+                ->where('scheduled_date', '<', now());
+        } elseif ($statusFilter === 'voltooid') {
+            $query->where('status', 'voltooid');
+        } elseif ($statusFilter === 'in_uitvoering') {
+            $query->where('status', 'in_uitvoering');
+        } elseif ($statusFilter === 'geannuleerd') {
+            $query->where('status', 'geannuleerd');
+        }
+
+        if ($typeFilter && in_array($typeFilter, ['periodiek', 'reparatie', 'installatie'])) {
+            $query->where('type', $typeFilter);
+        }
+
+        if ($priorityFilter && in_array($priorityFilter, ['laag', 'normaal', 'hoog', 'urgent'])) {
+            $query->where('priority', $priorityFilter);
+        }
+
+        // Date filter
+        if ($dateFilter === 'vandaag') {
+            $query->whereDate('scheduled_date', today());
+        } elseif ($dateFilter === 'deze_week') {
+            $query->whereBetween('scheduled_date', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($dateFilter === 'deze_maand') {
+            $query->whereBetween('scheduled_date', [now()->startOfMonth(), now()->endOfMonth()]);
+        } elseif ($dateFilter === 'aankomende_week') {
+            $query->whereBetween('scheduled_date', [now()->addWeek()->startOfWeek(), now()->addWeek()->endOfWeek()]);
+        }
+
+        $maintenances = $query->orderBy('scheduled_date', 'desc')->get();
+
+        $totalCount = Maintenance::count();
+        $completedCount = Maintenance::where('status', 'voltooid')->count();
+        $upcomingCount = Maintenance::where('status', 'gepland')
+            ->where('scheduled_date', '>', now())->count();
+        $overdueCount = Maintenance::where('status', 'gepland')
+            ->where('scheduled_date', '<', now())->count();
+
+        return view('maintenance.index', compact(
+            'maintenances',
+            'statusFilter',
+            'typeFilter',
+            'priorityFilter',
+            'dateFilter',
+            'totalCount',
+            'completedCount',
+            'upcomingCount',
+            'overdueCount'
+        ));
     }
 
     public function create()
@@ -32,6 +90,7 @@ class MaintenanceController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'type' => 'required|in:periodiek,reparatie,installatie',
+            'priority' => 'required|in:laag,normaal,hoog,urgent',
             'scheduled_date' => 'required|date',
             'notes' => 'nullable|string'
         ]);
@@ -66,6 +125,7 @@ class MaintenanceController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'type' => 'required|in:periodiek,reparatie,installatie',
+            'priority' => 'required|in:laag,normaal,hoog,urgent',
             'status' => 'required|in:gepland,in_uitvoering,voltooid,geannuleerd',
             'scheduled_date' => 'required|date',
             'completed_date' => 'nullable|date',
@@ -96,6 +156,7 @@ class MaintenanceController extends Controller
         return redirect()->route('maintenance.show', $maintenance)
             ->with('success', 'Onderhoudstaak gemarkeerd als voltooid!');
     }
+
     public function createForCustomer(Customer $customer)
     {
         $technicians = User::where('department_id',

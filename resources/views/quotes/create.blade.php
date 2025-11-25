@@ -1,11 +1,11 @@
 @extends('components.layouts.app')
 
-@section('title', 'Nieuwe Offerte - Barroc Intens')
+@section('title', 'Nieuwe Offerte')
 
 @section('content')
 <div class="mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Nieuwe Offerte</h1>
-    <p class="text-gray-600">Maak een nieuwe offerte voor een klant</p>
+    <p class="text-gray-600">Selecteer een klant en voeg producten toe</p>
 </div>
 
 <div class="bg-white rounded-lg shadow p-6">
@@ -13,14 +13,14 @@
         @csrf
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Klant Selectie -->
+            <!-- Klantgegevens -->
             <div>
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Klant Selectie</h2>
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Klantgegevens</h2>
 
                 <div class="mb-6">
                     <label for="customer_id" class="block text-sm font-medium text-gray-700">Klant *</label>
                     <select name="customer_id" id="customer_id" required
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
+                            class="mt-1 block w-full border-yellow-400 rounded-md shadow-sm focus:border-yellow-400 focus:ring focus:ring-yellow-400 focus:ring-opacity-50">
                         <option value="">Selecteer een klant</option>
                         @foreach($customers as $customer)
                             <option value="{{ $customer->id }}" data-address="{{ $customer->address }}, {{ $customer->postal_code }} {{ $customer->city }}">
@@ -34,8 +34,9 @@
                 <!-- Geldig tot -->
                 <div class="mb-6">
                     <label for="valid_until" class="block text-sm font-medium text-gray-700">Geldig tot *</label>
-                    <input type="date" name="valid_until" id="valid_until" required
-                           min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                    <input type="date" name="valid_until" id="valid_until"
+                           value="{{ old('valid_until', now()->addDays(30)->format('Y-m-d')) }}"
+                           required
                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50">
                 </div>
 
@@ -44,15 +45,7 @@
                     <label for="notes" class="block text-sm font-medium text-gray-700">Notities</label>
                     <textarea name="notes" id="notes" rows="3"
                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50"
-                              placeholder="Optionele notities voor de offerte..."></textarea>
-                </div>
-
-                <!-- Algemene Voorwaarden -->
-                <div class="mb-6">
-                    <label for="terms" class="block text-sm font-medium text-gray-700">Algemene Voorwaarden</label>
-                    <textarea name="terms" id="terms" rows="4"
-                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-yellow-500 focus:ring focus:ring-yellow-500 focus:ring-opacity-50"
-                              placeholder="Standaard betalingsvoorwaarden: 30 dagen netto.">Standaard betalingsvoorwaarden: 30 dagen netto.</textarea>
+                              placeholder="Optionele notities voor de offerte...">{{ old('notes') }}</textarea>
                 </div>
             </div>
 
@@ -61,7 +54,7 @@
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Producten</h2>
 
                 <div id="products-container">
-                    <!-- Producten worden hier dynamisch toegevoegd -->
+                    <!-- Dynamische productvelden -->
                 </div>
 
                 <!-- Product Toevoegen -->
@@ -117,7 +110,7 @@
     </form>
 </div>
 
-<!-- Product Template (Hidden) -->
+<!-- Product Template -->
 <template id="product-template">
     <div class="product-item border border-gray-200 rounded-lg p-4 mb-4">
         <div class="flex justify-between items-start mb-2">
@@ -150,35 +143,16 @@
     </div>
 </template>
 
-{{-- ... bestaande HTML code ... --}}
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const productsContainer = document.getElementById('products-container');
     const productSelect = document.getElementById('product_select');
     const addProductBtn = document.getElementById('add-product');
     const productTemplate = document.getElementById('product-template');
-    const customerSelect = document.getElementById('customer_id');
-    const customerAddress = document.getElementById('customer-address');
 
     let productCounter = 0;
     const addedProducts = new Set();
 
-    // Toon klant adres
-    if (customerSelect && customerAddress) {
-        customerSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const address = selectedOption.getAttribute('data-address');
-            if (address) {
-                customerAddress.textContent = address;
-                customerAddress.classList.remove('hidden');
-            } else {
-                customerAddress.classList.add('hidden');
-            }
-        });
-    }
-
-    // Voeg product toe
     if (addProductBtn && productSelect) {
         addProductBtn.addEventListener('click', function() {
             const selectedOption = productSelect.options[productSelect.selectedIndex];
@@ -199,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const productClone = productTemplate.content.cloneNode(true);
             const productElement = productClone.querySelector('.product-item');
 
-            // Vul de template
+            // Vul de velden
             productElement.querySelector('.product-name').textContent = productName;
             productElement.querySelector('.product-price').textContent = `€${parseFloat(productPrice).toFixed(2).replace('.', ',')} per stuk`;
             productElement.querySelector('.unit-price-input').value = `€${parseFloat(productPrice).toFixed(2).replace('.', ',')}`;
@@ -212,9 +186,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 addedProducts.delete(parseInt(productId));
                 productElement.remove();
                 calculateTotals();
+                updateFormValidation();
             });
 
-            // Quantity change
+            // Aantal wijziging
             const quantityInput = productElement.querySelector('.quantity-input');
             const totalPriceInput = productElement.querySelector('.total-price-input');
             const unitPrice = parseFloat(productPrice);
@@ -228,71 +203,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
             quantityInput.addEventListener('input', updateProductTotal);
             quantityInput.addEventListener('change', updateProductTotal);
-
-            // Initial calculation
             updateProductTotal();
 
             productsContainer.appendChild(productElement);
             addedProducts.add(parseInt(productId));
             productCounter++;
-
-            // Reset select
             productSelect.selectedIndex = 0;
-
-            // Update form validation
             updateFormValidation();
         });
     }
 
-    // Bereken totalen
+    // Totaal berekening
     function calculateTotals() {
         let subtotal = 0;
-
         document.querySelectorAll('.product-item').forEach(item => {
             const totalPriceText = item.querySelector('.total-price-input').value;
             const totalPrice = parseFloat(totalPriceText.replace('€', '').replace(',', '.')) || 0;
             subtotal += totalPrice;
         });
-
         const vat = subtotal * 0.21;
         const total = subtotal + vat;
-
-        const subtotalElement = document.getElementById('subtotal');
-        const vatElement = document.getElementById('vat');
-        const totalElement = document.getElementById('total');
-
-        if (subtotalElement) subtotalElement.textContent = `€${subtotal.toFixed(2).replace('.', ',')}`;
-        if (vatElement) vatElement.textContent = `€${vat.toFixed(2).replace('.', ',')}`;
-        if (totalElement) totalElement.textContent = `€${total.toFixed(2).replace('.', ',')}`;
+        document.getElementById('subtotal').textContent = `€${subtotal.toFixed(2).replace('.', ',')}`;
+        document.getElementById('vat').textContent = `€${vat.toFixed(2).replace('.', ',')}`;
+        document.getElementById('total').textContent = `€${total.toFixed(2).replace('.', ',')}`;
     }
 
-    // Form validation
     function updateFormValidation() {
         const submitButton = document.querySelector('button[type="submit"]');
-        if (submitButton) {
-            submitButton.disabled = addedProducts.size === 0;
+        submitButton.disabled = addedProducts.size === 0;
+    }
+
+    document.getElementById('quoteForm').addEventListener('submit', function(e) {
+        if (addedProducts.size === 0) {
+            e.preventDefault();
+            alert('Voeg minimaal één product toe aan de offerte');
         }
-    }
-
-    const quoteForm = document.getElementById('quoteForm');
-    if (quoteForm) {
-        quoteForm.addEventListener('submit', function(e) {
-            if (addedProducts.size === 0) {
-                e.preventDefault();
-                alert('Voeg minimaal één product toe aan de offerte');
-                return;
-            }
-
-            if (customerSelect && !customerSelect.value) {
-                e.preventDefault();
-                alert('Selecteer een klant');
-                return;
-            }
-        });
-    }
-
-    // Initial form validation
-    updateFormValidation();
+    });
 });
 </script>
 @endsection

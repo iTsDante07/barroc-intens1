@@ -16,16 +16,7 @@ class InvoiceController extends Controller
         return view('invoices.index', compact('invoices'));
     }
 
-    public function createFromQuote(Quote $quote)
-    {
-        if ($quote->status !== 'geaccepteerd') {
-            return redirect()->route('quotes.show', $quote)
-                ->with('error', 'Alleen geaccepteerde offertes kunnen worden omgezet in facturen.');
-        }
-
-        return view('invoices.create', compact('quote'));
-    }
-
+    
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -108,5 +99,41 @@ class InvoiceController extends Controller
 
         return redirect()->route('invoices.index')
             ->with('success', 'Factuur succesvol verwijderd!');
+    }
+    public function createFromQuote(Quote $quote)
+    {
+        if (!$quote->canCreateInvoice()) {
+            return redirect()->route('quotes.show', $quote)
+                ->with('error', 'Alleen geaccepteerde offertes zonder bestaande factuur kunnen worden omgezet in facturen.');
+        }
+
+        return view('invoices.create-from-quote', compact('quote'));
+    }
+
+
+
+    public function storeFromQuote(Request $request, Quote $quote)
+    {
+        if (!$quote->canCreateInvoice()) {
+            return redirect()->route('quotes.show', $quote)
+                ->with('error', 'Alleen geaccepteerde offertes zonder bestaande factuur kunnen worden omgezet in facturen.');
+        }
+
+        $validated = $request->validate([
+            'invoice_date' => 'required|date',
+            'due_date' => 'required|date|after:invoice_date',
+            'notes' => 'nullable|string',
+        ]);
+
+        try {
+            $invoice = Invoice::createFromQuote($quote, $validated);
+
+            return redirect()->route('invoices.show', $invoice)
+                ->with('success', 'Factuur succesvol aangemaakt vanuit offerte!');
+
+        } catch (\Exception $e) {
+            return redirect()->route('quotes.show', $quote)
+                ->with('error', $e->getMessage());
+        }
     }
 }
