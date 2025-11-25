@@ -13,7 +13,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\Inkoop\ProductController as InkoopProductController;
 use App\Http\Controllers\Inkoop\PurchaseOrderController;
-use App\Http\Controllers\Inkoop\NotificationController;
+// use App\Http\Controllers\Inkoop\NotificationController;
 use App\Http\Controllers\UserController;
 
 Route::get('/login', function () {
@@ -94,32 +94,31 @@ Route::middleware('auth')->group(function () {
     Route::post('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update.role');
 });
 
-        // Inkoop Routes
-     Route::prefix('inkoop')->name('inkoop.')->group(function () {
-            // Producten beheer
-            Route::get('/products', [InkoopProductController::class, 'index'])->name('products.index');
-            Route::get('/products/create', [InkoopProductController::class, 'create'])->name('products.create');
-            Route::post('/products', [InkoopProductController::class, 'store'])->name('products.store');
-            Route::get('/products/{product}/edit', [InkoopProductController::class, 'edit'])->name('products.edit');
-            Route::put('/products/{product}', [InkoopProductController::class, 'update'])->name('products.update');
-            Route::delete('/products/{product}', [InkoopProductController::class, 'destroy'])->name('products.destroy');
+// Inkoop Routes
+Route::prefix('inkoop')->name('inkoop.')->group(function () {
+    // Producten beheer
+    Route::get('/products', [InkoopProductController::class, 'index'])->name('products.index');
+    Route::get('/products/create', [InkoopProductController::class, 'create'])->name('products.create');
+    Route::post('/products', [InkoopProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{product}/edit', [InkoopProductController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{product}', [InkoopProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{product}', [InkoopProductController::class, 'destroy'])->name('products.destroy');
 
-            // Voorraad beheer
-            Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])->name('products.update-stock');
-            Route::get('/low-stock', [InkoopProductController::class, 'lowStock'])->name('products.low-stock');
+    // Voorraad beheer
+    Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])->name('products.update-stock');
+    Route::get('/low-stock', [InkoopProductController::class, 'lowStock'])->name('products.low-stock');
 
-            // Bestellingen
-            Route::get('/orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
-            Route::get('/orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
-            Route::post('/orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
-            Route::get('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
-            Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
+    // Bestellingen
+    Route::get('/orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+    Route::get('/orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+    Route::post('/orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+    Route::get('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
+    Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
 
-            // Meldingen
-            Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-            Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-        });
-    });
+    // Meldingen
+    // Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    // Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+});
 
 // Settings routes
 Route::middleware(['auth'])->group(function () {
@@ -143,9 +142,9 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Debug route
-Route::get('/check-table', function() {
+Route::get('/check-table', function () {
     $columns = Schema::getColumnListing('maintenances');
     dd($columns);
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

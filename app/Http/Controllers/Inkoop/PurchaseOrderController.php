@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Inkoop;
 
+use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\Product;
 use App\Models\Supplier;
