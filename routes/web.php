@@ -67,10 +67,18 @@ Route::middleware('auth')->group(function () {
     })->name('maintenance.index');
 
     // Admin routes
+<<<<<<< Updated upstream
     Route::get('/users', function () {
         $users = \App\Models\User::with('department')->get();
         return view('users.index', compact('users'));
     })->name('users.index');
+=======
+
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+
+    // User management actions
+    Route::post('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update.role');
+>>>>>>> Stashed changes
 });
 Route::get('/', function () {
     return view('welcome');
@@ -80,6 +88,26 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+<<<<<<< Updated upstream
+=======
+            // Voorraad beheer
+            Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])->name('products.update-stock');
+            Route::get('/low-stock', [InkoopProductController::class, 'lowStock'])->name('products.low-stock');
+
+            // Bestellingen
+            Route::get('/orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+            Route::get('/orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+            Route::post('/orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+            Route::get('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
+            Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
+
+            // Meldingen
+            Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+            Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        });
+
+// Settings routes
+>>>>>>> Stashed changes
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
