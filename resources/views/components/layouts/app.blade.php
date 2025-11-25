@@ -134,10 +134,10 @@
                     {{ session('info') }}
                 </div>
             @endif
-
+            {{ $slot ?? '' }}
             @yield('content')
         </main>
-    </div>
+        </div>
 
     @yield('scripts')
     @livewireScripts
