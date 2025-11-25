@@ -11,6 +11,8 @@
         .border-barroc-yellow { border-color: #FFD700; }
         .hover\:bg-barroc-yellow:hover { background-color: #FFD700; }
     </style>
+    @livewireStyles
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-100">
     <!-- Navigation -->
@@ -111,7 +113,7 @@
                 <!-- Profile Link voor iedereen -->
                 <div class="px-4 py-2 text-gray-500 text-sm font-bold">ACCOUNT</div>
                 <a href="{{ route('profile.edit') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('profile.*') ? 'bg-barroc-yellow text-black' : '' }}">
-                    ⚙️ Profiel
+                    ⚙️ Instellingen
                 </a>
             </nav>
         </aside>
@@ -137,11 +139,12 @@
                     {{ session('info') }}
                 </div>
             @endif
-
+            {{ $slot ?? '' }}
             @yield('content')
         </main>
-    </div>
+        </div>
 
     @yield('scripts')
+    @livewireScripts
 </body>
 </html>
