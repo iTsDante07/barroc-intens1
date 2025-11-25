@@ -7,9 +7,40 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::all();
+        $query = Product::query();
+
+        // Zoekfunctionaliteit
+        if ($request->has('search') && $request->search != '') {
+            $query->search($request->search);
+        }
+
+        // Categorie filter
+        if ($request->has('category') && $request->category != '') {
+            $query->byCategory($request->category);
+        }
+
+        // Voorraad status filter
+        if ($request->has('stock_status') && $request->stock_status != '') {
+            $query->byStockStatus($request->stock_status);
+        }
+
+        // Sortering (optioneel - toegevoegd voor betere UX)
+        $sort = $request->get('sort', 'name');
+        $direction = $request->get('direction', 'asc');
+
+        $validSorts = ['name', 'price', 'stock', 'created_at'];
+        $validDirections = ['asc', 'desc'];
+
+        if (in_array($sort, $validSorts) && in_array($direction, $validDirections)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name');
+        }
+
+        $products = $query->paginate(12)->withQueryString();
+
         return view('products.index', compact('products'));
     }
 

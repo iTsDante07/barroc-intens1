@@ -16,11 +16,12 @@ class QuoteController extends Controller
         return view('quotes.index', compact('quotes'));
     }
 
+
     public function create()
     {
         $customers = Customer::where('bkr_checked', true)
-                           ->where('bkr_approved', true)
-                           ->get();
+                        ->where('bkr_approved', true)
+                        ->get();
         $products = Product::all();
 
         return view('quotes.create', compact('customers', 'products'));
