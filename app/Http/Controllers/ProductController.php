@@ -7,9 +7,40 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::all();
+        $query = Product::query();
+
+        // Zoekfunctionaliteit
+        if ($request->has('search') && $request->search != '') {
+            $query->search($request->search);
+        }
+
+        // Categorie filter
+        if ($request->has('category') && $request->category != '') {
+            $query->byCategory($request->category);
+        }
+
+        // Voorraad status filter
+        if ($request->has('stock_status') && $request->stock_status != '') {
+            $query->byStockStatus($request->stock_status);
+        }
+
+        // Sortering (optioneel - toegevoegd voor betere UX)
+        $sort = $request->get('sort', 'name');
+        $direction = $request->get('direction', 'asc');
+
+        $validSorts = ['name', 'price', 'stock', 'created_at'];
+        $validDirections = ['asc', 'desc'];
+
+        if (in_array($sort, $validSorts) && in_array($direction, $validDirections)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name');
+        }
+
+        $products = $query->paginate(12)->withQueryString();
+
         return view('products.index', compact('products'));
     }
 
@@ -68,13 +99,14 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return redirect()->route('products.index')
+        return redirect()->route('products.show', $product)
             ->with('success', 'Product succesvol bijgewerkt!');
     }
 
     public function destroy(Product $product)
     {
-        if ($product->image) {
+        // Verwijder afbeelding als die bestaat
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
             Storage::disk('public')->delete($product->image);
         }
 
@@ -83,4 +115,19 @@ class ProductController extends Controller
         return redirect()->route('products.index')
             ->with('success', 'Product succesvol verwijderd!');
     }
-}   
+
+    // Nieuwe methode om alleen de afbeelding te verwijderen
+    public function deleteImage(Product $product)
+    {
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
+            $product->update(['image' => null]);
+
+            return redirect()->route('products.show', $product)
+                ->with('success', 'Afbeelding succesvol verwijderd!');
+        }
+
+        return redirect()->route('products.show', $product)
+            ->with('warning', 'Geen afbeelding gevonden om te verwijderen.');
+    }
+}

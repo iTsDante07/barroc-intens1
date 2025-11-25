@@ -39,7 +39,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
 }; ?>
 
 <div class="flex flex-col gap-6">
-    <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
+    <x-auth-header :title="__('Account aanmaken')" :description="__('Voer hieronder uw gegevens in om uw account aan te maken')" />
 
     <!-- Session Status -->
     <x-auth-session-status class="text-center" :status="session('status')" />
@@ -48,55 +48,59 @@ new #[Layout('components.layouts.auth')] class extends Component {
         <!-- Name -->
         <flux:input
             wire:model="name"
-            :label="__('Name')"
+            :label="__('Naam')"
             type="text"
             required
             autofocus
             autocomplete="name"
-            :placeholder="__('Full name')"
+            :placeholder="__('Volledige naam')"
+            class="focus:ring-yellow-400"
         />
 
         <!-- Email Address -->
         <flux:input
             wire:model="email"
-            :label="__('Email address')"
+            :label="__('E-mailadres')"
             type="email"
             required
             autocomplete="email"
             placeholder="email@example.com"
+            class="focus:ring-yellow-400"
         />
 
         <!-- Password -->
         <flux:input
             wire:model="password"
-            :label="__('Password')"
+            :label="__('Wachtwoord')"
             type="password"
             required
             autocomplete="new-password"
-            :placeholder="__('Password')"
+            :placeholder="__('Wachtwoord')"
             viewable
+            class="focus:ring-yellow-400"
         />
 
         <!-- Confirm Password -->
         <flux:input
             wire:model="password_confirmation"
-            :label="__('Confirm password')"
+            :label="__('Bevestig wachtwoord')"
             type="password"
             required
             autocomplete="new-password"
-            :placeholder="__('Confirm password')"
+            :placeholder="__('Bevestig wachtwoord')"
             viewable
+            class="focus:ring-yellow-400"
         />
 
         <div class="flex items-center justify-end">
-            <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
-                {{ __('Create account') }}
+            <flux:button type="submit" variant="primary" class="w-full text-grey-100 !bg-yellow-400" data-test="register-user-button">
+                {{ __('Account aanmaken') }}
             </flux:button>
         </div>
     </form>
 
     <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
-        <span>{{ __('Already have an account?') }}</span>
-        <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
+        <span>{{ __('Heeft u al een account?') }}</span>
+        <flux:link :href="route('login')" wire:navigate>{{ __('Inloggen') }}</flux:link>
     </div>
 </div>

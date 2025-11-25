@@ -16,11 +16,12 @@ class QuoteController extends Controller
         return view('quotes.index', compact('quotes'));
     }
 
+
     public function create()
     {
         $customers = Customer::where('bkr_checked', true)
-                           ->where('bkr_approved', true)
-                           ->get();
+                        ->where('bkr_approved', true)
+                        ->get();
         $products = Product::all();
 
         return view('quotes.create', compact('customers', 'products'));
@@ -108,6 +109,83 @@ class QuoteController extends Controller
             ->with('success', 'Offerte succesvol aangemaakt!');
     }
 
+    public function storeForCustomer(Request $request, Customer $customer)
+    {
+        // Check of klant BKR goedgekeurd is
+        if (!$customer->bkr_approved) {
+            return redirect()->route('customers.show', $customer)
+                ->with('error', 'Kan geen offerte maken voor deze klant. BKR check is niet goedgekeurd.');
+        }
+
+        // Debug: toon wat er binnenkomt
+        \Log::info('Store for customer request:', $request->all());
+
+        $validated = $request->validate([
+            'valid_until' => 'required|date|after:today',
+            'notes' => 'nullable|string',
+            'products' => 'required|array|min:1',
+        ]);
+
+        // Bereken totaalbedragen
+        $subtotal = 0;
+        $productsData = [];
+
+        foreach ($validated['products'] as $productId => $data) {
+            // Check of product geselecteerd is
+            if (isset($data['selected']) && $data['selected'] == '1') {
+                $product = Product::find($data['product_id']);
+                $quantity = $data['quantity'] ?? 1;
+                $totalPrice = $product->price * $quantity;
+                $subtotal += $totalPrice;
+
+                $productsData[] = [
+                    'product_id' => $data['product_id'],
+                    'quantity' => $quantity,
+                    'unit_price' => $product->price,
+                    'total_price' => $totalPrice
+                ];
+            }
+        }
+
+        // Check of er producten zijn geselecteerd
+        if (empty($productsData)) {
+            return redirect()->back()
+                ->with('error', 'Selecteer minimaal één product.')
+                ->withInput();
+        }
+
+        $vatAmount = $subtotal * 0.21;
+        $totalAmount = $subtotal + $vatAmount;
+
+        // Maak offerte aan
+        $quote = Quote::create([
+            'customer_id' => $customer->id,
+            'user_id' => auth()->id(),
+            'quote_number' => Quote::generateQuoteNumber(),
+            'subtotal' => $subtotal,
+            'vat_amount' => $vatAmount,
+            'total_amount' => $totalAmount,
+            'valid_until' => $validated['valid_until'],
+            'notes' => $validated['notes'],
+            'terms' => 'Standaard betalingsvoorwaarden: 30 dagen netto.',
+            'status' => 'concept'
+        ]);
+
+        // Voeg producten toe aan offerte
+        foreach ($productsData as $productData) {
+            QuoteProduct::create([
+                'quote_id' => $quote->id,
+                'product_id' => $productData['product_id'],
+                'quantity' => $productData['quantity'],
+                'unit_price' => $productData['unit_price'],
+                'total_price' => $productData['total_price']
+            ]);
+        }
+
+        return redirect()->route('quotes.show', $quote)
+            ->with('success', 'Offerte succesvol aangemaakt voor ' . $customer->company_name . '!');
+    }
+
     public function show(Quote $quote)
     {
         $quote->load(['customer', 'user', 'products.product']);
@@ -155,10 +233,8 @@ class QuoteController extends Controller
             'terms' => $validated['terms'] ?? $quote->terms,
         ]);
 
-        // Remove existing products
         $quote->products()->delete();
 
-        // Add updated products
         foreach ($validated['products'] as $productData) {
             $product = Product::find($productData['product_id']);
             $unitPrice = $product->price;
@@ -173,12 +249,100 @@ class QuoteController extends Controller
             ]);
         }
 
-        // Recalculate totals
         $quote->calculateTotals();
 
         return redirect()->route('quotes.show', $quote)
             ->with('success', 'Offerte succesvol bijgewerkt!');
     }
+
+
+    public function createForCustomer(Customer $customer)
+    {
+        // Check of klant BKR goedgekeurd is
+        if (!$customer->bkr_approved) {
+            return redirect()->route('customers.show', $customer)
+                ->with('error', 'Kan geen offerte maken voor deze klant. BKR check is niet goedgekeurd.');
+        }
+
+        // Haal alle actieve producten op
+        $products = Product::where('is_active', true)
+                        ->orWhere('stock', '>', 0)
+                        ->get();
+
+        // Als er geen producten zijn, toon een foutmelding
+        if ($products->count() === 0) {
+            return redirect()->route('customers.show', $customer)
+                ->with('error', 'Er zijn geen producten beschikbaar in de catalogus. Voeg eerst producten toe.');
+        }
+
+        return view('quotes.create-for-customer', compact('customer', 'products'));
+    }
+
+
+    // public function storeForCustomer(Request $request, Customer $customer)
+    // {
+    //     if (!$customer->bkr_approved) {
+    //         return redirect()->route('customers.show', $customer)
+    //             ->with('error', 'Kan geen offerte maken voor deze klant. BKR check is niet goedgekeurd.');
+    //     }
+
+    //     $validated = $request->validate([
+    //         'valid_until' => 'required|date|after:today',
+    //         'notes' => 'nullable|string',
+    //         'products' => 'required|array|min:1',
+    //         'products.*.product_id' => 'required|exists:products,id',
+    //         'products.*.quantity' => 'required|integer|min:1',
+    //     ]);
+
+    //     // Bereken totaalbedragen
+    //     $subtotal = 0;
+    //     $productsData = [];
+
+    //     foreach ($validated['products'] as $productData) {
+    //         $product = Product::find($productData['product_id']);
+    //         $quantity = $productData['quantity'];
+    //         $totalPrice = $product->price * $quantity;
+    //         $subtotal += $totalPrice;
+
+    //         $productsData[] = [
+    //             'product_id' => $productData['product_id'],
+    //             'quantity' => $quantity,
+    //             'unit_price' => $product->price,
+    //             'total_price' => $totalPrice
+    //         ];
+    //     }
+
+    //     $vatAmount = $subtotal * 0.21;
+    //     $totalAmount = $subtotal + $vatAmount;
+
+    //     // Maak offerte aan
+    //     $quote = Quote::create([
+    //         'customer_id' => $customer->id,
+    //         'user_id' => auth()->id(),
+    //         'quote_number' => Quote::generateQuoteNumber(),
+    //         'subtotal' => $subtotal,
+    //         'vat_amount' => $vatAmount,
+    //         'total_amount' => $totalAmount,
+    //         'valid_until' => $validated['valid_until'],
+    //         'notes' => $validated['notes'],
+    //         'terms' => 'Standaard betalingsvoorwaarden: 30 dagen netto.',
+    //         'status' => 'concept'
+    //     ]);
+
+    //     // Voeg producten toe aan offerte
+    //     foreach ($productsData as $productData) {
+    //         QuoteProduct::create([
+    //             'quote_id' => $quote->id,
+    //             'product_id' => $productData['product_id'],
+    //             'quantity' => $productData['quantity'],
+    //             'unit_price' => $productData['unit_price'],
+    //             'total_price' => $productData['total_price']
+    //         ]);
+    //     }
+
+    //     return redirect()->route('quotes.show', $quote)
+    //         ->with('success', 'Offerte succesvol aangemaakt voor ' . $customer->company_name . '!');
+    // }
 
     public function destroy(Quote $quote)
     {
