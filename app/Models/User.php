@@ -1,5 +1,5 @@
 <?php
-// app/Models/User.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +28,21 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
+    // Role methods
+    public function hasRole($role)
+    {
+        return $this->role === $role;
+    }
+
+    public function hasAnyRole($roles)
+    {
+        if (is_array($roles)) {
+            return in_array($this->role, $roles);
+        }
+
+        return $this->role === $roles;
+    }
+
     public function isAdmin()
     {
         return $this->role === 'admin';
@@ -36,5 +51,20 @@ class User extends Authenticatable
     public function isManager()
     {
         return $this->role === 'manager';
+    }
+
+    public function isCustomer()
+    {
+        return $this->role === 'customer';
+    }
+
+    public function isMaintenance()
+    {
+        return $this->role === 'maintenance';
+    }
+
+    public function isInkoop()
+    {
+        return $this->role === 'inkoop';
     }
 }

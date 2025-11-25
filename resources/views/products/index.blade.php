@@ -25,24 +25,71 @@
         </div>
     </div>
 
-    <!-- Categorie Filter -->
+    <!-- Filter en Zoekbalk -->
     <div class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="py-4">
-                <div class="flex space-x-2 overflow-x-auto pb-2">
-                    <button class="px-4 py-2 bg-yellow-500 text-black rounded-full font-semibold text-sm whitespace-nowrap">
-                        Alle Producten
-                    </button>
-                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full font-medium text-sm hover:bg-gray-200 transition-colors whitespace-nowrap">
-                        Koffiemachines
-                    </button>
-                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full font-medium text-sm hover:bg-gray-200 transition-colors whitespace-nowrap">
-                        Koffiebonen
-                    </button>
-                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full font-medium text-sm hover:bg-gray-200 transition-colors whitespace-nowrap">
-                        Accessoires
-                    </button>
-                </div>
+                <form method="GET" action="{{ route('products.index') }}" class="flex flex-col sm:flex-row gap-4">
+                    <!-- Zoekbalk -->
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text"
+                                   name="search"
+                                   placeholder="Zoek producten..."
+                                   value="{{ request('search') }}"
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Categorie Filter -->
+                    <div class="flex gap-2">
+                        <select name="category" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+                            <option value="">Alle categorieën</option>
+                            @foreach(App\Models\Product::CATEGORIES as $key => $category)
+                                <option value="{{ $key }}" {{ request('category') == $key ? 'selected' : '' }}>
+                                    {{ $category }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <select name="stock_status" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+                            <option value="">Alle voorraad</option>
+                            <option value="op_voorraad" {{ request('stock_status') == 'op_voorraad' ? 'selected' : '' }}>Op voorraad</option>
+                            <option value="lage_voorraad" {{ request('stock_status') == 'lage_voorraad' ? 'selected' : '' }}>Lage voorraad</option>
+                            <option value="uit_voorraad" {{ request('stock_status') == 'uit_voorraad' ? 'selected' : '' }}>Uit voorraad</option>
+                        </select>
+
+                        <button type="submit" class="bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
+                            Filter
+                        </button>
+
+                        @if(request()->hasAny(['search', 'category', 'stock_status']))
+                            <a href="{{ route('products.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors flex items-center">
+                                Wis filters
+                            </a>
+                        @endif
+                    </div>
+                </form>
+
+                <!-- Resultaat info -->
+                @if(request()->hasAny(['search', 'category', 'stock_status']))
+                    <div class="mt-3 text-sm text-gray-600">
+                        @php
+                            $resultCount = $products->count();
+                            $totalCount = App\Models\Product::count();
+                        @endphp
+                        {{ $resultCount }} van de {{ $totalCount }} producten getoond
+
+                        @if(request('search'))
+                            voor "{{ request('search') }}"
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -70,12 +117,21 @@
 
                 <!-- Product Info -->
                 <div class="p-4">
-                    <h3 class="font-semibold text-gray-900 text-lg mb-2 leading-tight">{{ $product->name }}</h3>
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="font-semibold text-gray-900 text-lg leading-tight flex-1">{{ $product->name }}</h3>
+                        <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full ml-2 whitespace-nowrap">
+                            {{ App\Models\Product::CATEGORIES[$product->category] ?? $product->category }}
+                        </span>
+                    </div>
+
                     <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ $product->description }}</p>
 
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-2xl font-bold text-yellow-600">€{{ number_format($product->price, 2, ',', '.') }}</span>
-                        <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        <span class="text-sm px-2 py-1 rounded-full
+                            @if($product->stock > 10) bg-green-100 text-green-800
+                            @elseif($product->stock > 0) bg-orange-100 text-orange-800
+                            @else bg-red-100 text-red-800 @endif">
                             {{ $product->stock }} op voorraad
                         </span>
                     </div>
@@ -97,14 +153,33 @@
             </div>
             @endforeach
         </div>
+
+        <!-- Pagination -->
+        @if($products->hasPages())
+        <div class="mt-6">
+            {{ $products->links() }}
+        </div>
+        @endif
+
         @else
         <!-- Empty State -->
         <div class="text-center py-12">
             <svg class="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8V4a1 1 0 00-1-1h-2a1 1 0 00-1 1v1M9 7h6"></path>
             </svg>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Geen producten beschikbaar</h3>
-            <p class="text-gray-600 mb-6">Er zijn momenteel geen producten in de catalogus.</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Geen producten gevonden</h3>
+            <p class="text-gray-600 mb-6">
+                @if(request()->hasAny(['search', 'category', 'stock_status']))
+                    Probeer uw zoekcriteria aan te passen.
+                @else
+                    Er zijn momenteel geen producten in de catalogus.
+                @endif
+            </p>
+            @if(request()->hasAny(['search', 'category', 'stock_status']))
+                <a href="{{ route('products.index') }}" class="bg-yellow-500 text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
+                    Toon alle producten
+                </a>
+            @endif
         </div>
         @endif
     </div>
