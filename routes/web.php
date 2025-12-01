@@ -90,10 +90,7 @@ Route::middleware('auth')->group(function () {
 
     // Admin routes
 
-    Route::get('/users', function () {
-        $users = \App\Models\User::with('department')->get();
-        return view('users.index', compact('users'));
-    })->name('users.index');
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
     // User management actions
     Route::post('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update.role');
