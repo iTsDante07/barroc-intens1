@@ -20,6 +20,10 @@ Route::get('/login', function () {
     return view('auth.custom-login');
 })->name('login');
 
+Route::get('/profile', function () {
+    return view('profile');
+})->middleware(['auth'])->name('profile.edit');
+
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
@@ -85,10 +89,8 @@ Route::middleware('auth')->group(function () {
     });
 
     // Admin routes
-    Route::get('/users', function () {
-        $users = \App\Models\User::with('department')->get();
-        return view('users.index', compact('users'));
-    })->name('users.index');
+
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
     // User management actions
     Route::post('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update.role');
@@ -103,6 +105,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/products/{product}', [InkoopProductController::class, 'update'])->name('products.update');
         Route::delete('/products/{product}', [InkoopProductController::class, 'destroy'])->name('products.destroy');
 
+
         // Voorraad beheer
         Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])->name('products.update-stock');
         Route::get('/low-stock', [InkoopProductController::class, 'lowStock'])->name('products.low-stock');
@@ -114,13 +117,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
         Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
 
-        // Meldingen
-        // Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-        // Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+            // Meldingen
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     });
-});
+
 
 // Settings routes
+
+// Settings routes
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 

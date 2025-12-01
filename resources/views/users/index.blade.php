@@ -28,17 +28,26 @@
 						<tr class="border-t">
 							<td class="p-3">{{ $user->name }}</td>
 							<td class="p-3">{{ $user->email }}</td>
-							<td class="p-3">{{ optional($user->department)->name ?? '-' }}</td>
+							<td class="p-3">{{ optional($user->department)->name ?? '-- Geen afdeling --' }}</td>
 							<td class="p-3">{{ ucfirst($user->role) }}</td>
 							<td class="p-3">
 								@if(auth()->user() && auth()->user()->isAdmin())
 									<form action="{{ route('users.update.role', $user) }}" method="POST" class="flex items-center gap-2">
 										@csrf
+
+										<select name="department_id" class="border rounded px-2 py-1 bg-white">
+											<option value="">-- Geen afdeling --</option>
+											@foreach($departments as $dept)
+												<option value="{{ $dept->id }}" {{ $user->department_id == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
+											@endforeach
+										</select>
+
 										<select name="role" class="border rounded px-2 py-1 bg-white">
 											<option value="employee" {{ $user->role === 'employee' ? 'selected' : '' }}>Employee</option>
 											<option value="manager" {{ $user->role === 'manager' ? 'selected' : '' }}>Manager</option>
 											<option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
 										</select>
+
 										<button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Sla op</button>
 									</form>
 								@else
