@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Admin routes
+
     Route::get('/users', function () {
         $users = \App\Models\User::with('department')->get();
         return view('users.index', compact('users'));
@@ -108,6 +109,7 @@ Route::middleware('auth')->group(function () {
             Route::put('/products/{product}', [InkoopProductController::class, 'update'])->name('products.update');
             Route::delete('/products/{product}', [InkoopProductController::class, 'destroy'])->name('products.destroy');
 
+
             // Voorraad beheer
             Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])->name('products.update-stock');
             Route::get('/low-stock', [InkoopProductController::class, 'lowStock'])->name('products.low-stock');
@@ -124,7 +126,11 @@ Route::middleware('auth')->group(function () {
             Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
         });
 
+
 // Settings routes
+
+// Settings routes
+
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
