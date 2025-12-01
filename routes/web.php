@@ -19,6 +19,10 @@ Route::get('/login', function () {
     return view('auth.custom-login');
 })->name('login');
 
+Route::get('/profile', function () {
+    return view('profile');
+})->middleware(['auth'])->name('profile.edit');
+
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
@@ -118,7 +122,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
             Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
         });
-    });
 
 // Settings routes
 Route::middleware(['auth'])->group(function () {
