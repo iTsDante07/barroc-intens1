@@ -20,6 +20,10 @@ Route::get('/login', function () {
     return view('auth.custom-login');
 })->name('login');
 
+Route::get('/profile', function () {
+    return view('profile');
+})->middleware(['auth'])->name('profile.edit');
+
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
@@ -124,8 +128,6 @@ Route::middleware('auth')->group(function () {
 
 
 // Settings routes
-
-    });
 
 // Settings routes
 
