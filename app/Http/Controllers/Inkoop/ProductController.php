@@ -11,7 +11,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        if (!auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin'])) {
+        if (!in_array(auth()->user()->department_id, [4, 5])) {
             abort(403, 'Alleen inkoop medewerkers, managers en admins hebben toegang.');
         }
 
@@ -20,7 +20,7 @@ class ProductController extends Controller
         // Zoeken
         if ($request->has('search') && $request->search) {
             $query->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('description', 'like', "%{$request->search}%");
+                ->orWhere('description', 'like', "%{$request->search}%");
         }
 
         // Filter op voorraadstatus
@@ -41,7 +41,7 @@ class ProductController extends Controller
 
     public function create()
     {
-        if (!auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin'])) {
+        if (!in_array(auth()->user()->department_id, [4, 5])) {
             abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten aanmaken.');
         }
 
@@ -50,7 +50,7 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin'])) {
+        if (!auth()->user()->department_id, [4, 5])) {
             abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten aanmaken.');
         }
 
@@ -75,7 +75,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        if (!auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin'])) {
+        if (!in_array(auth()->user()->department_id, [4, 5])) {
             abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten bewerken.');
         }
 
@@ -84,7 +84,7 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        if (!auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin'])) {
+        if (!in_array(auth()->user()->department_id, [4, 5])) {
             abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten bewerken.');
         }
 
@@ -113,7 +113,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if (!auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin'])) {
+        if (!in_array(auth()->user()->department_id, [4, 5])) {
             abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten verwijderen.');
         }
 
@@ -136,7 +136,7 @@ class ProductController extends Controller
 
     public function updateStock(Request $request, Product $product)
     {
-        if (!auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin'])) {
+        if (!in_array(auth()->user()->department_id, [4, 5])) {
             abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen voorraad bijwerken.');
         }
 
@@ -160,7 +160,7 @@ class ProductController extends Controller
 
     public function lowStock()
     {
-        if (!auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin'])) {
+        if (!in_array(auth()->user()->department_id, [4, 5])) {
             abort(403, 'Alleen inkoop medewerkers, managers en admins hebben toegang.');
         }
 
@@ -170,7 +170,7 @@ class ProductController extends Controller
 
     public function deleteImage(Product $product)
     {
-        if (!auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin'])) {
+        if (!in_array(auth()->user()->department_id, [4, 5])) {
             abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen afbeeldingen verwijderen.');
         }
 
