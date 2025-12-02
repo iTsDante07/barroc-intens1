@@ -15,18 +15,87 @@ use App\Http\Controllers\Inkoop\ProductController as InkoopProductController;
 use App\Http\Controllers\Inkoop\PurchaseOrderController;
 // use App\Http\Controllers\Inkoop\NotificationController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/login', function () {
     return view('auth.custom-login');
 })->name('login');
 
-Route::get('/profile', function () {
-    return view('profile');
-})->middleware(['auth'])->name('profile.edit');
+
+
+// Profiel routes
+Route::middleware(['auth'])->group(function () {
+    // Profiel pagina tonen
+    Route::get('/profile', function () {
+        return view('profile');
+    })->name('profile.edit');
+
+    // Profiel bijwerken (naam en email)
+    Route::put('/profile', function (Request $request) {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+        ]);
+
+        if ($user->email !== $validated['email']) {
+            $validated['email_verified_at'] = null;
+        }
+
+        $user->update($validated);
+
+        return redirect()->route('profile.edit')->with('status', 'profile-updated');
+    })->name('profile.update');
+
+    // Wachtwoord wijzigen
+    Route::put('/password', function (Request $request) {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        Auth::user()->update([
+            'password' => bcrypt($request->password)
+        ]);
+
+        return redirect()->route('profile.edit')->with('status', 'password-updated');
+    })->name('password.update');
+
+    // Account verwijderen
+    Route::delete('/profile', function (Request $request) {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('status', 'Je account is succesvol verwijderd.');
+    })->name('profile.destroy');
+
+    // Email verificatie opnieuw sturen
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('status', 'verification-link-sent');
+    })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+});
 
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// Public BKR check page and quick-check endpoint
+Route::get('/customers/bkr-check', [CustomerController::class, 'bkrCheck'])->name('customers.bkr-check');
+Route::post('/customers/quick-bkr-check', [CustomerController::class, 'quickBkrCheck'])->name('customers.quick-bkr-check');
 
 // Public product routes (voor klanten)
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -45,8 +114,6 @@ Route::middleware('auth')->group(function () {
 
     // Customer routes
     Route::resource('customers', CustomerController::class);
-    Route::get('/customers/bkr-check', [CustomerController::class, 'bkrCheck'])->name('customers.bkr-check');
-    Route::post('/customers/quick-bkr-check', [CustomerController::class, 'quickBkrCheck'])->name('customers.quick-bkr-check');
     Route::post('/customers/{customer}/check-bkr', [CustomerController::class, 'checkBkr'])->name('customers.check-bkr');
 
     // Quote routes
