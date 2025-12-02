@@ -112,9 +112,9 @@
 
             <!-- Datums -->
             <div>
-                <label for="scheduled_date" class="block text-sm font-medium text-gray-700 mb-2">Geplande Datum *</label>
-                <input type="date" name="scheduled_date" id="scheduled_date" required
-                    value="{{ old('scheduled_date', $maintenance->scheduled_date->format('Y-m-d')) }}"
+                <label for="scheduled_date" class="block text-sm font-medium text-gray-700 mb-2">Gepland Moment *</label>
+                <input type="datetime-local" name="scheduled_date" id="scheduled_date" required
+                    value="{{ old('scheduled_date', optional($maintenance->scheduled_date)->format('Y-m-d\TH:i')) }}"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
             </div>
 

@@ -175,7 +175,7 @@ class MaintenanceController extends Controller
         $events = $maintenances->map(fn($maintenance) => [
             'id' => $maintenance->id,
             'title' => $maintenance->title,
-            'start' => optional($maintenance->scheduled_date)->toDateString(),
+            'start' => optional($maintenance->scheduled_date)->toIso8601String(),
             'backgroundColor' => $this->colorByPriority($maintenance->priority),
             'borderColor' => $this->colorByPriority($maintenance->priority),
             'extendedProps' => [
