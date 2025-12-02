@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Inkoop;
 
+use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\Product;
 use App\Models\Supplier;
@@ -15,7 +16,9 @@ class PurchaseOrderController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('inkoop.orders.index', compact('orders'));
+        $products = Product::latest()->paginate(20);
+
+        return view('inkoop.products.index', compact('orders', 'products'));
     }
 
     public function create()
@@ -23,7 +26,7 @@ class PurchaseOrderController extends Controller
         $products = Product::active()->get();
         $suppliers = Supplier::active()->get();
 
-        return view('inkoop.orders.create', compact('products', 'suppliers'));
+        return view('inkoop.products.create', compact('products', 'suppliers'));
     }
 
     public function store(Request $request)
