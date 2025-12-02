@@ -67,4 +67,43 @@ class User extends Authenticatable
     {
         return $this->role === 'inkoop';
     }
+
+    public function isSales()
+    {
+        return $this->role === 'sales';
+    }
+
+    public function isFinance()
+    {
+        return $this->role === 'finance';
+    }
+
+    public function isInPurchaseDepartment(): bool
+    {
+        return $this->department && strtolower($this->department->name) === 'purchase';
+    }
+
+    public function canAccessPurchase(): bool
+    {
+        return $this->hasAnyRole(['inkoop', 'manager', 'admin']) ||
+               $this->isInPurchaseDepartment();
+    }
+
+    public function canAccessSales(): bool
+    {
+        return $this->hasAnyRole(['sales', 'manager', 'admin']) ||
+               ($this->department && strtolower($this->department->name) === 'sales');
+    }
+
+    public function canAccessFinance(): bool
+    {
+        return $this->hasAnyRole(['finance', 'manager', 'admin']) ||
+               ($this->department && strtolower($this->department->name) === 'finance');
+    }
+
+    public function canAccessMaintenance(): bool
+    {
+        return $this->hasAnyRole(['maintenance', 'manager', 'admin']) ||
+               ($this->department && strtolower($this->department->name) === 'maintenance');
+    }
 }

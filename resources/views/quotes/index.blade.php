@@ -126,9 +126,6 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <a href="{{ route('quotes.show', $quote) }}" class="text-blue-600 hover:text-blue-900">Bekijken</a>
-                        @if($quote->status === 'concept')
-                            <a href="{{ route('quotes.edit', $quote) }}" class="text-green-600 hover:text-green-900">Bewerken</a>
-                        @endif
                     </td>
                 </tr>
                 @endforeach

@@ -27,9 +27,6 @@
             </form>
         @endif
 
-        <a href="{{ route('invoices.download.pdf', $invoice) }}" class="bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
-            📄 PDF Downloaden
-        </a>
 
         @if($invoice->status === 'concept')
             <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" onsubmit="return confirm('Weet je zeker dat je deze factuur wilt verwijderen?')">
