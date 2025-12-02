@@ -57,7 +57,7 @@
                 </a>
 
                 <!-- Sales Links -->
-                @if(auth()->user()->canAccessSales())
+                @if(auth()->user()->department && (auth()->user()->department->name === 'Sales' || auth()->user()->isManager() || auth()->user()->isAdmin()))
                 <div class="px-4 py-2 text-gray-500 text-sm font-bold">SALES</div>
                 <a href="{{ route('products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('products.index') ? 'bg-barroc-yellow text-black' : '' }}">
                     📦 Producten
@@ -74,7 +74,7 @@
                 @endif
 
                 <!-- Finance Links -->
-                @if(auth()->user()->canAccessFinance())
+                @if(auth()->user()->department && (auth()->user()->department->name === 'Finance' || auth()->user()->isManager() || auth()->user()->isAdmin()))
                 <div class="px-4 py-2 text-gray-500 text-sm font-bold">FINANCE</div>
                 <a href="{{ route('invoices.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('invoices.*') ? 'bg-barroc-yellow text-black' : '' }}">
                     🧾 Facturen
@@ -82,16 +82,15 @@
                 @endif
 
                 <!-- Maintenance Links -->
-                @if(auth()->user()->canAccessMaintenance())
+                @if(auth()->user()->department && (auth()->user()->department->name === 'Maintenance' || auth()->user()->isManager() || auth()->user()->isAdmin()))
                 <div class="px-4 py-2 text-gray-500 text-sm font-bold">ONDERHOUD</div>
                 <a href="{{ route('maintenance.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('maintenance.*') ? 'bg-barroc-yellow text-black' : '' }}">
                     🔧 Onderhoud
                 </a>
                 @endif
-
                 <!-- Purchase Links -->
-                @if(auth()->user()->canAccessPurchase())
-                <div class="px-4 py-2 text-gray-500 text-sm font-bold">INKOOP</div>
+                @if(auth()->user()->department && (auth()->user()->department->name === 'Purchase' || auth()->user()->isManager() || auth()->user()->isAdmin()))
+                <div class="px-4 py-2 text-gray-500 text-sm font-bold">Purchase</div>
                 <a href="{{ route('inkoop.products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.products.*') ? 'bg-barroc-yellow text-black' : '' }}">
                     📦 Producten Beheer
                 </a>
@@ -104,7 +103,7 @@
                 @endif
 
                 <!-- Admin Links -->
-                @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+                @if(auth()->user()->isAdmin())
                 <div class="px-4 py-2 text-gray-500 text-sm font-bold">BEHEER</div>
                 <a href="{{ route('users.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('users.*') ? 'bg-barroc-yellow text-black' : '' }}">
                     👤 Gebruikers
@@ -143,7 +142,7 @@
             {{ $slot ?? '' }}
             @yield('content')
         </main>
-    </div>
+        </div>
 
     @yield('scripts')
     @livewireScripts

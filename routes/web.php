@@ -163,33 +163,82 @@ Route::middleware('auth')->group(function () {
     Route::post('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update.role');
 });
 
-        // Inkoop Routes
-     Route::prefix('inkoop')->name('inkoop.')->group(function () {
-            // Producten beheer
-            Route::get('/products', [InkoopProductController::class, 'index'])->name('products.index');
-            Route::get('/products/create', [InkoopProductController::class, 'create'])->name('products.create');
-            Route::post('/products', [InkoopProductController::class, 'store'])->name('products.store');
-            Route::get('/products/{product}/edit', [InkoopProductController::class, 'edit'])->name('products.edit');
-            Route::put('/products/{product}', [InkoopProductController::class, 'update'])->name('products.update');
-            Route::delete('/products/{product}', [InkoopProductController::class, 'destroy'])->name('products.destroy');
+// Inkoop Routes
+Route::prefix('inkoop')->name('inkoop.')->middleware(['auth'])->group(function () {
+    // Controleer of gebruiker purchase department, manager of admin is
+    Route::group(['middleware' => function ($request, $next) {
+        $user = auth()->user();
 
+        if (!$user) {
+            abort(403, 'Niet ingelogd');
+        }
 
-            // Voorraad beheer
-            Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])->name('products.update-stock');
-            Route::get('/low-stock', [InkoopProductController::class, 'lowStock'])->name('products.low-stock');
+        // Debug info
+        $debugInfo = [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'role' => $user->role,
+            'department_id' => $user->department_id,
+            'department_name' => $user->department ? $user->department->name : 'none',
+            'is_manager' => $user->role === 'manager',
+            'is_admin' => $user->role === 'admin',
+        ];
 
-            // Bestellingen
-            Route::get('/orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
-            Route::get('/orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
-            Route::post('/orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
-            Route::get('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
-            Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
+        // Check 1: Purchase department (case insensitive)
+        if ($user->department) {
+            $deptName = $user->department->name;
+            $debugInfo['department_check'] = $deptName;
 
-            // Meldingen
-            Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-            Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-        });
+            // Case insensitive check
+            if (strtolower($deptName) === 'purchase') {
+                $debugInfo['access_granted'] = 'via purchase department';
+                \Log::info('Purchase access granted', $debugInfo);
+                return $next($request);
+            }
+        }
 
+        // Check 2: Manager role
+        if ($user->role === 'manager') {
+            $debugInfo['access_granted'] = 'via manager role';
+            \Log::info('Purchase access granted', $debugInfo);
+            return $next($request);
+        }
+
+        // Check 3: Admin role
+        if ($user->role === 'admin') {
+            $debugInfo['access_granted'] = 'via admin role';
+            \Log::info('Purchase access granted', $debugInfo);
+            return $next($request);
+        }
+
+        $debugInfo['access_granted'] = 'DENIED';
+        \Log::warning('Purchase access denied', $debugInfo);
+        abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins hebben toegang.');
+    }], function () {
+        // Producten beheer
+        Route::get('/products', [InkoopProductController::class, 'index'])->name('products.index');
+        Route::get('/products/create', [InkoopProductController::class, 'create'])->name('products.create');
+        Route::post('/products', [InkoopProductController::class, 'store'])->name('products.store');
+        Route::get('/products/{product}/edit', [InkoopProductController::class, 'edit'])->name('products.edit');
+        Route::put('/products/{product}', [InkoopProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/{product}', [InkoopProductController::class, 'destroy'])->name('products.destroy');
+
+        // Voorraad beheer
+        Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])->name('products.update-stock');
+        Route::get('/low-stock', [InkoopProductController::class, 'lowStock'])->name('products.low-stock');
+
+        // Bestellingen
+        Route::get('/orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
+        Route::get('/orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
+        Route::post('/orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+        Route::get('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
+        Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
+
+        // Meldingen
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    });
+});
 
 // Settings routes
 
