@@ -139,22 +139,112 @@ class DashboardController extends Controller
     private function purchaseDashboard()
     {
         $lowStockThreshold = 10;
+        $minimumStockThreshold = 5;
+
+        // Basis statistieken
+        $totalProducts = Product::count();
+
+        // Laag voorraad producten (onder 10 maar boven 0)
+        $lowStockProducts = Product::where('stock', '<', $lowStockThreshold)
+                                ->where('stock', '>', 0)
+                                ->orderBy('stock', 'asc')
+                                ->get();
+
+        // Kritieke voorraad (onder 5 maar boven 0)
+        $criticalStockProducts = Product::where('stock', '<', $minimumStockThreshold)
+                                    ->where('stock', '>', 0)
+                                    ->orderBy('stock', 'asc')
+                                    ->get();
+
+        // Uitverkocht producten
+        $outOfStockProducts = Product::where('stock', 0)
+                                    ->orderBy('name', 'asc')
+                                    ->get();
+
+        // Totaal aantal laag voorraad
+        $lowStockCount = $lowStockProducts->count();
+        $criticalStockCount = $criticalStockProducts->count();
+        $outOfStockCount = $outOfStockProducts->count();
+
+        // Bereken totale voorraad waarde
+        $totalStockValue = Product::sum(DB::raw('price * stock'));
+
+        // Recente producten
+        $recentProducts = Product::latest()->take(5)->get();
+
+        // Voorbeeld van aankomende leveringen
+        $upcomingDeliveries = [];
+
+        // Categorie verdeling
+        $categoryStats = $this->getCategoryStats();
+
+        // Meest verkochte producten (neem recente producten als placeholder)
+        $topSellingProducts = $recentProducts;
+
+        // Bestellingen in afwachting (placeholder)
+        $pendingOrdersCount = 0;
+
+        // Bereken het gemiddelde aantal producten per categorie
+        $totalCategories = count(Product::CATEGORIES);
+        $avgProductsPerCategory = $totalProducts > 0 ? $totalProducts / $totalCategories : 0;
 
         $stats = [
-            'totalProducts' => Product::count(),
-            'lowStockProducts' => Product::where('stock', '<', $lowStockThreshold)
-                                        ->where('stock', '>', 0)
-                                        ->get(),
-            'outOfStockProducts' => Product::where('stock', 0)->get(),
-            'totalStockValue' => Product::sum(DB::raw('price * stock')),
-            'lowStockCount' => Product::where('stock', '<', $lowStockThreshold)
-                                     ->where('stock', '>', 0)
-                                     ->count(),
-            'outOfStockCount' => Product::where('stock', 0)->count(),
-            'recentProducts' => Product::latest()->take(5)->get(),
+            'totalProducts' => $totalProducts,
+            'lowStockProducts' => $lowStockProducts,
+            'criticalStockProducts' => $criticalStockProducts,
+            'outOfStockProducts' => $outOfStockProducts,
+            'lowStockCount' => $lowStockCount,
+            'criticalStockCount' => $criticalStockCount,
+            'outOfStockCount' => $outOfStockCount,
+            'totalStockValue' => $totalStockValue,
+            'recentProducts' => $recentProducts,
+            'upcomingDeliveries' => $upcomingDeliveries,
+            'categoryStats' => $categoryStats,
+            'topSellingProducts' => $topSellingProducts,
+            'pendingOrdersCount' => $pendingOrdersCount,
+            'avgProductsPerCategory' => $avgProductsPerCategory,
+            'lowStockThreshold' => $lowStockThreshold,
+            'minimumStockThreshold' => $minimumStockThreshold,
+            'categories' => Product::CATEGORIES,
         ];
 
         return view('dashboard.purchase', $stats);
+    }
+
+    // Helper method voor categorie statistieken
+    private function getCategoryStats()
+    {
+        $stats = [];
+        foreach (Product::CATEGORIES as $key => $name) {
+            $count = Product::where('category', $key)->count();
+            $lowStockCount = Product::where('category', $key)
+                                ->where('stock', '<', 10)
+                                ->where('stock', '>', 0)
+                                ->count();
+            $outOfStockCount = Product::where('category', $key)
+                                    ->where('stock', 0)
+                                    ->count();
+            $criticalStockCount = Product::where('category', $key)
+                                        ->where('stock', '<', 5)
+                                        ->where('stock', '>', 0)
+                                        ->count();
+
+            $stats[] = [
+                'key' => $key,
+                'name' => $name,
+                'count' => $count,
+                'low_stock_count' => $lowStockCount,
+                'critical_stock_count' => $criticalStockCount,
+                'out_of_stock_count' => $outOfStockCount,
+            ];
+        }
+
+        // Sorteer op aantal producten (hoog naar laag)
+        usort($stats, function($a, $b) {
+            return $b['count'] <=> $a['count'];
+        });
+
+        return $stats;
     }
 
     private function managementDashboard()
