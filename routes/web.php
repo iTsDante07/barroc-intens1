@@ -28,6 +28,10 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// Public BKR check page and quick-check endpoint
+Route::get('/customers/bkr-check', [CustomerController::class, 'bkrCheck'])->name('customers.bkr-check');
+Route::post('/customers/quick-bkr-check', [CustomerController::class, 'quickBkrCheck'])->name('customers.quick-bkr-check');
+
 // Public product routes (voor klanten)
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
@@ -45,8 +49,6 @@ Route::middleware('auth')->group(function () {
 
     // Customer routes
     Route::resource('customers', CustomerController::class);
-    Route::get('/customers/bkr-check', [CustomerController::class, 'bkrCheck'])->name('customers.bkr-check');
-    Route::post('/customers/quick-bkr-check', [CustomerController::class, 'quickBkrCheck'])->name('customers.quick-bkr-check');
     Route::post('/customers/{customer}/check-bkr', [CustomerController::class, 'checkBkr'])->name('customers.check-bkr');
 
     // Quote routes
