@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download.pdf');
 
     // Maintenance routes
+    Route::get('/maintenance/calendar', [MaintenanceController::class, 'calendar'])->name('maintenance.calendar');
     Route::resource('maintenance', MaintenanceController::class);
     Route::post('/maintenance/{maintenance}/start', [MaintenanceController::class, 'start'])->name('maintenance.start');
     Route::post('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
@@ -117,11 +118,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
         Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
 
-            // Meldingen
+        // Meldingen
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     });
-
+});
 
 // Settings routes
 

@@ -9,6 +9,9 @@
         <p class="text-gray-600">Beheer je accountgegevens en voorkeuren</p>
     </div>
     <div class="flex space-x-4">
+        <a href="{{ route('notifications.index') }}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
+            Notificaties
+        </a>
         <a href="{{ route('dashboard') }}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
             Terug naar Dashboard
         </a>
@@ -153,7 +156,7 @@
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Account Verwijderen</h2>
         <p class="text-gray-600 mb-4">Verwijder permanent je account en alle bijbehorende gegevens.</p>
 
-        @if(app('livewire')->getClass('settings.delete-user-form'))
+        @if (view()->exists('livewire.settings.delete-user-form'))
             <livewire:settings.delete-user-form />
         @else
             <div class="bg-red-50 border border-red-200 rounded-md p-4">

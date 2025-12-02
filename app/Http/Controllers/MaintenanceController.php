@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Maintenance;
@@ -8,7 +9,7 @@ use Illuminate\Http\Request;
 
 class MaintenanceController extends Controller
 {
-     public function index(Request $request)
+    public function index(Request $request)
     {
         $statusFilter = $request->get('status');
         $typeFilter = $request->get('type');
@@ -75,7 +76,8 @@ class MaintenanceController extends Controller
     public function create()
     {
         $customers = Customer::all();
-        $technicians = User::where('department_id',
+        $technicians = User::where(
+            'department_id',
             \App\Models\Department::where('name', 'Maintenance')->first()->id
         )->get();
 
@@ -110,7 +112,8 @@ class MaintenanceController extends Controller
     public function edit(Maintenance $maintenance)
     {
         $customers = Customer::all();
-        $technicians = User::where('department_id',
+        $technicians = User::where(
+            'department_id',
             \App\Models\Department::where('name', 'Maintenance')->first()->id
         )->get();
 
@@ -157,9 +160,50 @@ class MaintenanceController extends Controller
             ->with('success', 'Onderhoudstaak gemarkeerd als voltooid!');
     }
 
+    public function calendar()
+    {
+        $user = auth()->user();
+
+        if (!$user->isMaintenance() && !$user->isAdmin()) {
+            abort(403, 'Alleen monteurs en admins hebben toegang tot de planning.');
+        }
+
+        $maintenances = Maintenance::with(['assignedTechnician', 'customer'])
+            ->whereNotNull('scheduled_date')
+            ->get();
+
+        $events = $maintenances->map(fn($maintenance) => [
+            'id' => $maintenance->id,
+            'title' => $maintenance->title,
+            'start' => optional($maintenance->scheduled_date)->toDateString(),
+            'backgroundColor' => $this->colorByPriority($maintenance->priority),
+            'borderColor' => $this->colorByPriority($maintenance->priority),
+            'extendedProps' => [
+                'technician' => optional($maintenance->assignedTechnician)->name ?? 'Onbekend',
+                'customer' => optional($maintenance->customer)->company_name ?? 'Onbekend',
+                'status' => $maintenance->status,
+            ],
+        ])->filter(fn($event) => $event['start'])->values();
+
+        return view('maintenance.calendar', [
+            'events' => $events,
+        ]);
+    }
+
+    private function colorByPriority(?string $priority): string
+    {
+        return match ($priority) {
+            'hoog' => '#f97316',
+            'urgent' => '#dc2626',
+            'laag' => '#16a34a',
+            default => '#eab308',
+        };
+    }
+
     public function createForCustomer(Customer $customer)
     {
-        $technicians = User::where('department_id',
+        $technicians = User::where(
+            'department_id',
             \App\Models\Department::where('name', 'Maintenance')->first()->id
         )->get();
 
