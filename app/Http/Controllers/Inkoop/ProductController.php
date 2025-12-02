@@ -4,10 +4,7 @@ namespace App\Http\Controllers\Inkoop;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\User;
-use App\Notifications\LowStockNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -110,11 +107,6 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        if ($product->stock <= $product->min_stock) {
-            $inkoopUsers = User::where('department_id', 4)->get();
-            Notification::send($inkoopUsers, new LowStockNotification($product));
-        }
-
         return redirect()->route('inkoop.products.index')
             ->with('success', 'Product succesvol bijgewerkt.');
     }
@@ -161,11 +153,6 @@ class ProductController extends Controller
         }
 
         $product->save();
-
-        if ($product->stock <= $product->min_stock) {
-            $inkoopUsers = User::where('department_id', 4)->get();
-            Notification::send($inkoopUsers, new LowStockNotification($product));
-        }
 
         return redirect()->back()
             ->with('success', 'Voorraad succesvol bijgewerkt.');

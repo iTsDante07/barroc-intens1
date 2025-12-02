@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Notifications\LowStockNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Notification;
 
 class Product extends Model
 {
     use HasFactory;
+
+    protected bool $wasLowBeforeSave = false;
 
     protected $fillable = [
         'name',
@@ -32,6 +36,21 @@ class Product extends Model
         'overig' => 'Overig'
     ];
 
+    protected static function booted()
+    {
+        static::saving(function (Product $product) {
+            $previousThreshold = $product->getOriginal('min_stock') ?? ($product->min_stock ?? 0);
+            $originalStock = $product->exists ? $product->getOriginal('stock') : null;
+            $product->wasLowBeforeSave = $originalStock !== null && $originalStock <= $previousThreshold;
+        });
+
+        static::saved(function (Product $product) {
+            if ($product->isLowStock() && !$product->wasLowBeforeSave) {
+                $product->notifyLowStock();
+            }
+        });
+    }
+
     // Scope voor actieve producten
     public function scopeActive($query)
     {
@@ -52,7 +71,7 @@ class Product extends Model
     {
         if ($search) {
             return $query->where('name', 'LIKE', "%{$search}%")
-                        ->orWhere('description', 'LIKE', "%{$search}%");
+                ->orWhere('description', 'LIKE', "%{$search}%");
         }
         return $query;
     }
@@ -77,6 +96,11 @@ class Product extends Model
         return $this->hasMany(PurchaseOrderItem::class);
     }
 
+    public function isLowStock(): bool
+    {
+        return $this->stock !== null && $this->stock <= ($this->min_stock ?? 0);
+    }
+
     // Accessor voor stock status
     public function getStockStatusAttribute()
     {
@@ -99,5 +123,16 @@ class Product extends Model
         } else {
             return 'green';
         }
+    }
+
+    protected function notifyLowStock(): void
+    {
+        $inkoopUsers = User::where('department_id', 4)->get();
+
+        if ($inkoopUsers->isEmpty()) {
+            return;
+        }
+
+        Notification::send($inkoopUsers, new LowStockNotification($this));
     }
 }

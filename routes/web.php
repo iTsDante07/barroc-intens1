@@ -184,10 +184,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
         Route::get('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
         Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
-
-        // Meldingen
-        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-        Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     });
 });
 
