@@ -1,4 +1,5 @@
 <?php
+// app/Models/Invoice.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,7 @@ class Invoice extends Model
         'quote_id',
         'customer_id',
         'user_id',
+        'lease_contract_id',
         'invoice_number',
         'invoice_date',
         'due_date',
@@ -49,24 +51,65 @@ class Invoice extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function leaseContract()
+    {
+        return $this->belongsTo(LeaseContract::class, 'lease_contract_id');
+    }
+
     public function items()
     {
         return $this->hasMany(InvoiceItem::class);
     }
 
-    public static function generateInvoiceNumber()
+    public static function generateInvoiceNumber($type = 'regular')
     {
+        $prefix = match($type) {
+            'lease' => 'LI-',
+            'regular' => 'F',
+            default => 'F',
+        };
+
         $year = date('Y');
 
-        // Zoek het hoogste bestaande factuurnummer voor dit jaar
+        // Voor lease facturen: LI-YYYYMMDD-001
+        if ($type === 'lease') {
+            $date = date('Ymd');
+
+            // Zoek het hoogste nummer voor vandaag
+            $lastInvoice = self::where('invoice_number', 'like', "LI-{$date}-%")
+                ->orderBy('invoice_number', 'desc')
+                ->first();
+
+            if ($lastInvoice) {
+                $parts = explode('-', $lastInvoice->invoice_number);
+                $lastNumber = intval(end($parts));
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
+            }
+
+            return "LI-{$date}-" . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        }
+
+        // Voor reguliere facturen: FYYYY-0001
         $lastInvoice = self::where('invoice_number', 'like', "F{$year}-%")
+            ->orWhere('invoice_number', 'like', 'F-%') // Oude formaat ondersteunen
             ->orderBy('invoice_number', 'desc')
             ->first();
 
         if ($lastInvoice) {
-            // Extraheer het nummer deel en verhoog met 1
-            $parts = explode('-', $lastInvoice->invoice_number);
-            $lastNumber = intval($parts[1] ?? 0);
+            // Extract the number part
+            $invoiceNumber = $lastInvoice->invoice_number;
+
+            // Handle both formats: F2025-0001 and F-20251208-0001
+            if (str_starts_with($invoiceNumber, 'F-')) {
+                $parts = explode('-', $invoiceNumber);
+                $lastNumber = intval(end($parts));
+            } else {
+                $parts = explode('-', $invoiceNumber);
+                $lastNumber = intval($parts[1] ?? 0);
+            }
+
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
@@ -74,7 +117,7 @@ class Invoice extends Model
 
         $invoiceNumber = "F{$year}-" . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
 
-        // Dubbele controle: zorg ervoor dat het nummer echt uniek is
+        // Double-check for uniqueness
         while (self::where('invoice_number', $invoiceNumber)->exists()) {
             $newNumber++;
             $invoiceNumber = "F{$year}-" . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
@@ -85,7 +128,7 @@ class Invoice extends Model
 
     public static function createFromQuote(Quote $quote, array $data = [])
     {
-        // Controleer of de offerte geaccepteerd is
+        // Check if quote is accepted
         if ($quote->status !== 'geaccepteerd') {
             throw new \Exception('Alleen geaccepteerde offertes kunnen worden omgezet in facturen.');
         }
@@ -94,7 +137,7 @@ class Invoice extends Model
             'quote_id' => $quote->id,
             'customer_id' => $quote->customer_id,
             'user_id' => auth()->id() ?? $quote->user_id,
-            'invoice_number' => self::generateInvoiceNumber(),
+            'invoice_number' => self::generateInvoiceNumber('regular'),
             'invoice_date' => now(),
             'due_date' => now()->addDays(30),
             'subtotal' => $quote->subtotal,
@@ -135,5 +178,17 @@ class Invoice extends Model
     public function isOverdue()
     {
         return $this->status === 'verzonden' && $this->due_date->isPast();
+    }
+
+    // Scope for lease invoices
+    public function scopeLeaseInvoices($query)
+    {
+        return $query->whereNotNull('lease_contract_id');
+    }
+
+    // Scope for regular invoices
+    public function scopeRegularInvoices($query)
+    {
+        return $query->whereNull('lease_contract_id');
     }
 }

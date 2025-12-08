@@ -79,6 +79,9 @@
                 <a href="{{ route('invoices.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('invoices.*') ? 'bg-barroc-yellow text-black' : '' }}">
                     🧾 Facturen
                 </a>
+                <a href="{{ route('lease-contracts.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('lease-contracts.*') ? 'bg-barroc-yellow text-black' : '' }}">
+                    📑 Lease Contracten
+                </a>
                 @endif
 
                 <!-- Maintenance Links -->
