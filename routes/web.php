@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\LeaseContractController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\Inkoop\ProductController as InkoopProductController;
@@ -111,7 +112,8 @@ Route::middleware('auth')->group(function () {
     // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    Route::get('/invoices/create-simple', [InvoiceController::class, 'createSimple'])->name('invoices.create-simple');
+    Route::post('/invoices/store-simple', [InvoiceController::class, 'storeSimple'])->name('invoices.store-simple');
     // Customer routes
     Route::resource('customers', CustomerController::class);
     Route::post('/customers/{customer}/check-bkr', [CustomerController::class, 'checkBkr'])->name('customers.check-bkr');
@@ -144,6 +146,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/maintenance/{maintenance}/cancel', [MaintenanceController::class, 'cancel'])->name('maintenance.cancel');
     Route::post('/maintenance/{maintenance}/technician-notes', [MaintenanceController::class, 'addTechnicianNotes'])->name('maintenance.technician-notes');
     Route::get('/customers/{customer}/maintenance/create', [MaintenanceController::class, 'createForCustomer'])->name('maintenance.create-for-customer');
+
+
+    // Lease Contract routes
+    Route::resource('lease-contracts', LeaseContractController::class)->parameters([
+        'lease-contracts' => 'contract'
+    ]);
+    Route::post('lease-contracts/{contract}/create-invoice', [LeaseContractController::class, 'createInvoice'])->name('lease-contracts.create-invoice');
+    Route::post('lease-contracts/generate-all-invoices', [LeaseContractController::class, 'generateAllInvoices'])->name('lease-contracts.generate-all-invoices');
+
+    // Simple invoice routes
+    Route::get('/invoices/create-simple', [InvoiceController::class, 'createSimple'])->name('invoices.create-simple');
+    Route::post('/invoices/store-simple', [InvoiceController::class, 'storeSimple'])->name('invoices.store-simple');
+    // In web.php - Zorg dat deze routes bestaan:
+
 
     // Product management routes (alleen voor admins/managers)
     Route::middleware(['can:manage-products'])->group(function () {
