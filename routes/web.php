@@ -174,6 +174,8 @@ Route::middleware('auth')->group(function () {
     // Admin routes
 
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
     // User management actions
     Route::post('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update.role');
