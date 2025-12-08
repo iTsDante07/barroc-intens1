@@ -10,6 +10,22 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    private const DEPARTMENT_ROLE_MAP = [
+        1 => 'sales',
+        2 => 'finance',
+        3 => 'maintenance',
+        4 => 'inkoop',
+        5 => 'admin',
+        6 => 'klantenservice',
+    ];
+
+    public static function roleForDepartment(?int $departmentId): ?string
+    {
+        $key = $departmentId ? (int) $departmentId : 0;
+
+        return self::DEPARTMENT_ROLE_MAP[$key] ?? null;
+    }
+
     protected $fillable = [
         'name',
         'email',
@@ -29,6 +45,13 @@ class User extends Authenticatable
     }
 
     // Role methods
+    public function getRoleAttribute($value)
+    {
+        $departmentId = $this->department_id !== null ? (int) $this->department_id : null;
+
+        return self::roleForDepartment($departmentId) ?? $value;
+    }
+
     public function hasRole($role)
     {
         return $this->role === $role;
@@ -37,7 +60,7 @@ class User extends Authenticatable
     public function hasAnyRole($roles)
     {
         if (is_array($roles)) {
-            return in_array($this->role, $roles);
+            return in_array($this->role, $roles, true);
         }
 
         return $this->role === $roles;
@@ -45,12 +68,12 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return $this->role === 'admin';
+        return (int) $this->department_id === 5;
     }
 
     public function isManager()
     {
-        return $this->role === 'manager';
+        return (int) $this->department_id === 5;
     }
 
     public function isCustomer()
@@ -60,11 +83,11 @@ class User extends Authenticatable
 
     public function isMaintenance()
     {
-        return $this->role === 'maintenance';
+        return (int) $this->department_id === 3;
     }
 
     public function isInkoop()
     {
-        return $this->role === 'inkoop';
+        return (int) $this->department_id === 4;
     }
 }
