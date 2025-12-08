@@ -1,31 +1,31 @@
 import { gsap } from "gsap";
 
-function animateSplitText(selector, duration = 1) {
+function animateSplitText(
+    selector,
+    duration = 1,
+    shouldFloat = false,
+    staggerValue = 0.05
+) {
     const textElement = document.querySelector(selector);
 
     if (textElement) {
         const chars = [];
 
-        // Recursive function to split text nodes while preserving HTML structure
         function splitNode(node) {
             const childNodes = Array.from(node.childNodes);
-            node.innerHTML = ""; // Clear content to rebuild
+            node.innerHTML = "";
 
             childNodes.forEach((child) => {
                 if (child.nodeType === 3) {
-                    // Text node
                     const text = child.textContent;
-                    // Split by whitespace but capture it to preserve spacing
                     const segments = text.split(/(\s+)/);
 
                     segments.forEach((segment) => {
                         if (!segment) return;
 
                         if (segment.match(/^\s+$/)) {
-                            // Preserve whitespace
                             node.appendChild(document.createTextNode(segment));
                         } else {
-                            // Wrap word in a div to keep characters together
                             const wordDiv = document.createElement("div");
                             wordDiv.style.display = "inline-block";
 
@@ -33,6 +33,7 @@ function animateSplitText(selector, duration = 1) {
                                 const charSpan = document.createElement("span");
                                 charSpan.innerText = char;
                                 charSpan.style.display = "inline-block";
+                                charSpan.classList.add("char");
                                 wordDiv.appendChild(charSpan);
                                 chars.push(charSpan);
                             });
@@ -41,9 +42,8 @@ function animateSplitText(selector, duration = 1) {
                         }
                     });
                 } else if (child.nodeType === 1) {
-                    // Element node (e.g., span)
-                    splitNode(child); // Recurse into the element
-                    node.appendChild(child); // Put the element back
+                    splitNode(child);
+                    node.appendChild(child);
                 }
             });
         }
@@ -53,12 +53,31 @@ function animateSplitText(selector, duration = 1) {
         gsap.from(chars, {
             duration: duration,
             opacity: 0,
-            y: 20,
-            stagger: 0.01,
-            ease: "power2.out",
+            y: 50,
+            stagger: staggerValue,
+            ease: "back.out(1.7)",
+            onComplete: () => {
+                if (shouldFloat) {
+                    startWaveEffect(chars);
+                }
+            },
         });
     }
 }
 
-animateSplitText(".animate-title", 2);
-animateSplitText(".animate-text", 0.1);
+function startWaveEffect(targets) {
+    gsap.to(targets, {
+        y: -10,
+        duration: 1.5,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+        stagger: {
+            each: 0.1,
+            from: "start",
+        },
+    });
+}
+
+animateSplitText(".animate-title", 1, true, 0.05);
+animateSplitText(".animate-text", 1, false, 0.01);
