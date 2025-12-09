@@ -72,11 +72,6 @@ class Product extends Model
         }
     }
 
-    public function purchaseOrderItems()
-    {
-        return $this->hasMany(PurchaseOrderItem::class);
-    }
-
     // Accessor voor stock status
     public function getStockStatusAttribute()
     {

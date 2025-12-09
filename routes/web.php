@@ -191,17 +191,6 @@ Route::prefix('inkoop')->name('inkoop.')->middleware(['auth'])->group(function (
             abort(403, 'Niet ingelogd');
         }
 
-        // Debug info
-        $debugInfo = [
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'role' => $user->role,
-            'department_id' => $user->department_id,
-            'department_name' => $user->department ? $user->department->name : 'none',
-            'is_manager' => $user->role === 'manager',
-            'is_admin' => $user->role === 'admin',
-        ];
-
         // Check 1: Purchase department (case insensitive)
         if ($user->department) {
             $deptName = $user->department->name;
@@ -255,6 +244,13 @@ Route::prefix('inkoop')->name('inkoop.')->middleware(['auth'])->group(function (
         // Meldingen
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        // Extra product routes
+        Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])
+            ->name('products.updateStock');
+        Route::delete('/products/{product}/delete-image', [InkoopProductController::class, 'deleteImage'])
+            ->name('products.deleteImage');
+        Route::get('/products/low-stock', [InkoopProductController::class, 'lowStock'])
+            ->name('products.lowStock');
     });
 });
 

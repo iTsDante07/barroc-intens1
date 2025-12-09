@@ -97,9 +97,6 @@
                 <a href="{{ route('inkoop.products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.products.*') ? 'bg-barroc-yellow text-black' : '' }}">
                     📦 Producten Beheer
                 </a>
-                <a href="{{ route('inkoop.purchase-orders.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.purchase-orders.*') ? 'bg-barroc-yellow text-black' : '' }}">
-                    📋 Inkooporders
-                </a>
                 <a href="{{ route('inkoop.products.low-stock') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.products.low-stock') ? 'bg-barroc-yellow text-black' : '' }}">
                     ⚠️ Lage Voorraad
                 </a>
