@@ -7,6 +7,47 @@
 		<p class="text-gray-600 mt-1">Beheer gebruikers en wijs rollen toe (alleen voor admins).</p>
 	</div>
 
+	@if(auth()->user() && auth()->user()->isAdmin())
+	<div class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+		<h2 class="text-lg font-semibold text-gray-900 mb-4">Nieuwe gebruiker</h2>
+		<form action="{{ route('users.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+			@csrf
+			<div>
+				<label class="block text-sm font-medium text-gray-700 mb-1">Naam</label>
+				<input type="text" name="name" class="w-full border rounded px-3 py-2" required>
+			</div>
+			<div>
+				<label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+				<input type="email" name="email" class="w-full border rounded px-3 py-2" required>
+			</div>
+			<div>
+				<label class="block text-sm font-medium text-gray-700 mb-1">Wachtwoord</label>
+				<input type="password" name="password" class="w-full border rounded px-3 py-2" required minlength="8">
+			</div>
+			<div>
+				<label class="block text-sm font-medium text-gray-700 mb-1">Afdeling</label>
+				<select name="department_id" class="w-full border rounded px-3 py-2">
+					<option value="">-- Geen afdeling --</option>
+					@foreach($departments as $dept)
+						<option value="{{ $dept->id }}">{{ $dept->name }}</option>
+					@endforeach
+				</select>
+			</div>
+			<div>
+				<label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+				<select name="role" class="w-full border rounded px-3 py-2" required>
+					<option value="employee">Employee</option>
+					<option value="manager">Manager</option>
+					<option value="admin">Admin</option>
+				</select>
+			</div>
+			<div class="flex items-end">
+				<button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Aanmaken</button>
+			</div>
+		</form>
+	</div>
+	@endif
+
 	@if(session('status'))
 		<div class="mb-4 text-green-700 bg-green-100 p-3 rounded">{{ session('status') }}</div>
 	@endif
@@ -45,13 +86,17 @@
                                     </td>
 							<td class="p-3">
 								@if(auth()->user() && auth()->user()->isAdmin())
-									<form id="user-form-{{ $user->id }}" action="{{ route('users.update.role', $user) }}" method="POST" class="flex items-center gap-2">
-										@csrf
-
-
-
-										<button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Sla op</button>
-									</form>
+									<div class="flex items-center gap-2">
+										<form id="user-form-{{ $user->id }}" action="{{ route('users.update.role', $user) }}" method="POST" class="flex items-center gap-2">
+											@csrf
+											<button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Sla op</button>
+										</form>
+										<form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Weet je zeker dat je deze gebruiker wilt verwijderen?');">
+											@csrf
+											@method('DELETE')
+											<button type="submit" class="bg-red-600 text-white px-3 py-1 rounded">Verwijder</button>
+										</form>
+									</div>
 								@else
 									<span class="text-sm text-gray-600">Geen rechten</span>
 								@endif

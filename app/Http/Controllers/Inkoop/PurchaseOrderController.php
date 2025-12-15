@@ -16,7 +16,9 @@ class PurchaseOrderController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('inkoop.products.index', compact('orders'));
+        $products = Product::latest()->paginate(20);
+
+        return view('inkoop.products.index', compact('orders', 'products'));
     }
 
     public function create()
@@ -24,7 +26,7 @@ class PurchaseOrderController extends Controller
         $products = Product::active()->get();
         $suppliers = Supplier::active()->get();
 
-        return view('inkoop.purchase-orders.index', compact('orders'));
+        return view('inkoop.products.create', compact('products', 'suppliers'));
     }
 
     public function store(Request $request)

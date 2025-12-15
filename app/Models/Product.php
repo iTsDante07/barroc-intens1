@@ -91,16 +91,6 @@ class Product extends Model
         }
     }
 
-    public function purchaseOrderItems()
-    {
-        return $this->hasMany(PurchaseOrderItem::class);
-    }
-
-    public function isLowStock(): bool
-    {
-        return $this->stock !== null && $this->stock <= ($this->min_stock ?? 0);
-    }
-
     // Accessor voor stock status
     public function getStockStatusAttribute()
     {

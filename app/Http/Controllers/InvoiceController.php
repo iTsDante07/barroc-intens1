@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Invoice;
 use App\Models\Quote;
 use App\Models\Customer;
+use App\Models\LeaseContract;
 use App\Models\InvoiceItem;
 use Illuminate\Http\Request;
 use PDF;
@@ -16,7 +17,7 @@ class InvoiceController extends Controller
         return view('invoices.index', compact('invoices'));
     }
 
-    
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -28,18 +29,22 @@ class InvoiceController extends Controller
 
         $quote = Quote::with('products.product')->findOrFail($validated['quote_id']);
 
+        // Use the centralized invoice number generator
+        $invoiceNumber = Invoice::generateInvoiceNumber('regular');
+
         // Create invoice
         $invoice = Invoice::create([
             'quote_id' => $quote->id,
             'customer_id' => $quote->customer_id,
-            'invoice_number' => Invoice::generateInvoiceNumber(),
+            'invoice_number' => $invoiceNumber,
             'invoice_date' => $validated['invoice_date'],
             'due_date' => $validated['due_date'],
             'subtotal' => $quote->subtotal,
             'vat_amount' => $quote->vat_amount,
             'total_amount' => $quote->total_amount,
             'notes' => $validated['notes'],
-            'status' => 'concept'
+            'status' => 'concept',
+            'user_id' => auth()->id()
         ]);
 
         // Add items from quote
@@ -135,5 +140,73 @@ class InvoiceController extends Controller
             return redirect()->route('quotes.show', $quote)
                 ->with('error', $e->getMessage());
         }
+    }
+
+    public function createSimple(Request $request)
+    {
+        if (!auth()->user()->department ||
+            (auth()->user()->department->name !== 'Finance' &&
+            auth()->user()->role !== 'manager' &&
+            auth()->user()->role !== 'admin')) {
+            abort(403, 'Alleen finance medewerkers, managers en admins hebben toegang.');
+        }
+
+        $customers = Customer::all();
+        $contracts = LeaseContract::where('status', 'active')->get(); // Zorg dat deze lijn bestaat!
+
+        // Als er een contract_id in de query string zit, laad dat contract
+        $selectedContract = null;
+        if ($request->has('contract_id')) {
+            $selectedContract = LeaseContract::find($request->contract_id);
+        }
+
+        return view('invoices.create-simple', compact('customers', 'contracts', 'selectedContract'));
+    }
+
+// app/Http/Controllers/InvoiceController.php
+    public function storeSimple(Request $request)
+    {
+        if (!auth()->user()->department ||
+            (auth()->user()->department->name !== 'Finance' &&
+            auth()->user()->role !== 'manager' &&
+            auth()->user()->role !== 'admin')) {
+            abort(403, 'Alleen finance medewerkers, managers en admins hebben toegang.');
+        }
+
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'description' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0',
+            'invoice_date' => 'required|date',
+            'due_date' => 'required|date|after:invoice_date',
+            'notes' => 'nullable|string'
+        ]);
+
+        // Use the centralized invoice number generator
+        $invoiceNumber = Invoice::generateInvoiceNumber('regular');
+
+        $invoice = Invoice::create([
+            'invoice_number' => $invoiceNumber,
+            'customer_id' => $validated['customer_id'],
+            'invoice_date' => $validated['invoice_date'],
+            'due_date' => $validated['due_date'],
+            'subtotal' => $validated['amount'],
+            'vat_amount' => $validated['amount'] * 0.21,
+            'total_amount' => $validated['amount'] * 1.21,
+            'status' => 'concept',
+            'notes' => $validated['notes'],
+            'user_id' => auth()->id()
+        ]);
+
+        // Add item
+        $invoice->items()->create([
+            'description' => $validated['description'],
+            'quantity' => 1,
+            'unit_price' => $validated['amount'],
+            'total_price' => $validated['amount']
+        ]);
+
+        return redirect()->route('invoices.show', $invoice)
+            ->with('success', 'Factuur voor aansluitkosten succesvol aangemaakt.');
     }
 }

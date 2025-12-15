@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\LeaseContractController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\Inkoop\ProductController as InkoopProductController;
@@ -111,7 +112,8 @@ Route::middleware('auth')->group(function () {
     // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    Route::get('/invoices/create-simple', [InvoiceController::class, 'createSimple'])->name('invoices.create-simple');
+    Route::post('/invoices/store-simple', [InvoiceController::class, 'storeSimple'])->name('invoices.store-simple');
     // Customer routes
     Route::resource('customers', CustomerController::class);
     Route::post('/customers/{customer}/check-bkr', [CustomerController::class, 'checkBkr'])->name('customers.check-bkr');
@@ -146,6 +148,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/maintenance/{maintenance}/technician-notes', [MaintenanceController::class, 'addTechnicianNotes'])->name('maintenance.technician-notes');
     Route::get('/customers/{customer}/maintenance/create', [MaintenanceController::class, 'createForCustomer'])->name('maintenance.create-for-customer');
 
+
+    // Lease Contract routes
+    Route::resource('lease-contracts', LeaseContractController::class)->parameters([
+        'lease-contracts' => 'contract'
+    ]);
+    Route::post('lease-contracts/{contract}/create-invoice', [LeaseContractController::class, 'createInvoice'])->name('lease-contracts.create-invoice');
+    Route::post('lease-contracts/generate-all-invoices', [LeaseContractController::class, 'generateAllInvoices'])->name('lease-contracts.generate-all-invoices');
+
+    // Simple invoice routes
+    Route::get('/invoices/create-simple', [InvoiceController::class, 'createSimple'])->name('invoices.create-simple');
+    Route::post('/invoices/store-simple', [InvoiceController::class, 'storeSimple'])->name('invoices.store-simple');
+    // In web.php - Zorg dat deze routes bestaan:
+
+
     // Product management routes (alleen voor admins/managers)
     Route::middleware(['can:manage-products'])->group(function () {
         Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
@@ -159,12 +175,54 @@ Route::middleware('auth')->group(function () {
     // Admin routes
 
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
     // User management actions
     Route::post('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update.role');
+});
 
-    // Inkoop Routes
-    Route::prefix('inkoop')->name('inkoop.')->group(function () {
+// Inkoop Routes
+Route::prefix('inkoop')->name('inkoop.')->middleware(['auth'])->group(function () {
+    // Controleer of gebruiker purchase department, manager of admin is
+    Route::group(['middleware' => function ($request, $next) {
+        $user = auth()->user();
+
+        if (!$user) {
+            abort(403, 'Niet ingelogd');
+        }
+
+        // Check 1: Purchase department (case insensitive)
+        if ($user->department) {
+            $deptName = $user->department->name;
+            $debugInfo['department_check'] = $deptName;
+
+            // Case insensitive check
+            if (strtolower($deptName) === 'purchase') {
+                $debugInfo['access_granted'] = 'via purchase department';
+                \Log::info('Purchase access granted', $debugInfo);
+                return $next($request);
+            }
+        }
+
+        // Check 2: Manager role
+        if ($user->role === 'manager') {
+            $debugInfo['access_granted'] = 'via manager role';
+            \Log::info('Purchase access granted', $debugInfo);
+            return $next($request);
+        }
+
+        // Check 3: Admin role
+        if ($user->role === 'admin') {
+            $debugInfo['access_granted'] = 'via admin role';
+            \Log::info('Purchase access granted', $debugInfo);
+            return $next($request);
+        }
+
+        $debugInfo['access_granted'] = 'DENIED';
+        \Log::warning('Purchase access denied', $debugInfo);
+        abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins hebben toegang.');
+    }], function () {
         // Producten beheer
         Route::get('/products', [InkoopProductController::class, 'index'])->name('products.index');
         Route::get('/products/create', [InkoopProductController::class, 'create'])->name('products.create');
@@ -172,7 +230,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/products/{product}/edit', [InkoopProductController::class, 'edit'])->name('products.edit');
         Route::put('/products/{product}', [InkoopProductController::class, 'update'])->name('products.update');
         Route::delete('/products/{product}', [InkoopProductController::class, 'destroy'])->name('products.destroy');
-
 
         // Voorraad beheer
         Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])->name('products.update-stock');
@@ -184,6 +241,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
         Route::get('/orders/{order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
         Route::post('/orders/{order}/approve', [PurchaseOrderController::class, 'processApproval'])->name('purchase-orders.process-approval');
+
+        // Meldingen
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        // Extra product routes
+        Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])
+            ->name('products.updateStock');
+        Route::delete('/products/{product}/delete-image', [InkoopProductController::class, 'deleteImage'])
+            ->name('products.deleteImage');
+        Route::get('/products/low-stock', [InkoopProductController::class, 'lowStock'])
+            ->name('products.lowStock');
     });
 });
 

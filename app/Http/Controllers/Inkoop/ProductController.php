@@ -9,10 +9,35 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+    /**
+     * Check if user has purchase access
+     */
+    private function checkPurchaseAccess()
+    {
+        $user = auth()->user();
+
+        // Check op basis van department
+        if ($user->department && strtolower($user->department->name) === 'purchase') {
+            return true;
+        }
+
+        // Check op basis van role
+        if ($user->role === 'manager' || $user->role === 'admin') {
+            return true;
+        }
+
+        // Extra: check role 'inkoop' als die bestaat
+        if ($user->role === 'inkoop') {
+            return true;
+        }
+
+        return false;
+    }
+
     public function index(Request $request)
     {
-        if (!in_array(auth()->user()->department_id, [4, 5])) {
-            abort(403, 'Alleen inkoop medewerkers, managers en admins hebben toegang.');
+        if (!$this->checkPurchaseAccess()) {
+            abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins hebben toegang.');
         }
 
         $query = Product::query();
@@ -41,8 +66,8 @@ class ProductController extends Controller
 
     public function create()
     {
-        if (!in_array(auth()->user()->department_id, [4, 5])) {
-            abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten aanmaken.');
+        if (!$this->checkPurchaseAccess()) {
+            abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins kunnen producten aanmaken.');
         }
 
         return view('inkoop.products.create');
@@ -50,8 +75,8 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        if (!in_array(auth()->user()->department_id, [4, 5])) {
-            abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten aanmaken.');
+        if (!$this->checkPurchaseAccess()) {
+            abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins kunnen producten aanmaken.');
         }
 
         $validated = $request->validate([
@@ -75,8 +100,8 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        if (!in_array(auth()->user()->department_id, [4, 5])) {
-            abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten bewerken.');
+        if (!$this->checkPurchaseAccess()) {
+            abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins kunnen producten bewerken.');
         }
 
         return view('inkoop.products.edit', compact('product'));
@@ -84,8 +109,8 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        if (!in_array(auth()->user()->department_id, [4, 5])) {
-            abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten bewerken.');
+        if (!$this->checkPurchaseAccess()) {
+            abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins kunnen producten bewerken.');
         }
 
         $validated = $request->validate([
@@ -113,15 +138,10 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if (!in_array(auth()->user()->department_id, [4, 5])) {
-            abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen producten verwijderen.');
+        if (!$this->checkPurchaseAccess()) {
+            abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins kunnen producten verwijderen.');
         }
 
-        // Check of er nog bestellingen zijn voor dit product
-        if ($product->purchaseOrderItems()->count() > 0) {
-            return redirect()->back()
-                ->with('error', 'Dit product kan niet worden verwijderd omdat het al in bestellingen is gebruikt.');
-        }
 
         // Afbeelding verwijderen
         if ($product->image && Storage::disk('public')->exists($product->image)) {
@@ -136,8 +156,8 @@ class ProductController extends Controller
 
     public function updateStock(Request $request, Product $product)
     {
-        if (!in_array(auth()->user()->department_id, [4, 5])) {
-            abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen voorraad bijwerken.');
+        if (!$this->checkPurchaseAccess()) {
+            abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins kunnen voorraad bijwerken.');
         }
 
         $request->validate([
@@ -160,8 +180,8 @@ class ProductController extends Controller
 
     public function lowStock()
     {
-        if (!in_array(auth()->user()->department_id, [4, 5])) {
-            abort(403, 'Alleen inkoop medewerkers, managers en admins hebben toegang.');
+        if (!$this->checkPurchaseAccess()) {
+            abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins hebben toegang.');
         }
 
         $products = Product::where('stock', '<=', \DB::raw('min_stock'))->get();
@@ -170,8 +190,8 @@ class ProductController extends Controller
 
     public function deleteImage(Product $product)
     {
-        if (!in_array(auth()->user()->department_id, [4, 5])) {
-            abort(403, 'Alleen inkoop medewerkers, managers en admins kunnen afbeeldingen verwijderen.');
+        if (!$this->checkPurchaseAccess()) {
+            abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins kunnen afbeeldingen verwijderen.');
         }
 
         if ($product->image) {

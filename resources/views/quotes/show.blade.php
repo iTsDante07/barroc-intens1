@@ -10,9 +10,6 @@
     </div>
     <div class="flex space-x-4">
         @if($quote->status === 'concept')
-            <a href="{{ route('quotes.edit', $quote) }}" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">
-                Bewerken
-            </a>
             <form action="{{ route('quotes.send', $quote) }}" method="POST">
                 @csrf
                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
@@ -36,9 +33,6 @@
             </form>
         @endif
 
-        <a href="{{ route('quotes.download.pdf', $quote) }}" class="bg-yellow-500 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
-            PDF Downloaden
-        </a>
 
         <form action="{{ route('quotes.duplicate', $quote) }}" method="POST">
             @csrf
@@ -191,9 +185,6 @@
 
                 <div class="flex space-x-4">
                     @if($quote->status === 'concept')
-                        <a href="{{ route('quotes.edit', $quote) }}" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">
-                            Bewerken
-                        </a>
                         <form action="{{ route('quotes.send', $quote) }}" method="POST">
                             @csrf
                             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
@@ -230,20 +221,6 @@
                         </a>
                     @endif
 
-                    <a href="{{ route('quotes.download.pdf', $quote) }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
-                        PDF Downloaden
-                    </a>
-
-                    <form action="{{ route('quotes.duplicate', $quote) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                            Dupliceren
-                        </button>
-                    </form>
-
-                    <a href="{{ route('quotes.index') }}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
-                        Terug
-                    </a>
                 </div>
 
                 {{-- ... rest van de code ... --}}

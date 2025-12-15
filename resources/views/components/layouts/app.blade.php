@@ -80,6 +80,9 @@
                 <a href="{{ route('invoices.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('invoices.*') ? 'bg-barroc-yellow text-black' : '' }}">
                     🧾 Facturen
                 </a>
+                <a href="{{ route('lease-contracts.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('lease-contracts.*') ? 'bg-barroc-yellow text-black' : '' }}">
+                    📑 Lease Contracten
+                </a>
                 @endif
 
                 <!-- Maintenance Links -->
@@ -93,13 +96,10 @@
                 </a>
                 @endif
                 <!-- Purchase Links -->
-                @if(auth()->user()->hasAnyRole(['inkoop', 'manager', 'admin']))
-                <div class="px-4 py-2 text-gray-500 text-sm font-bold">INKOOP</div>
+                @if(auth()->user()->department && (auth()->user()->department->name === 'Purchase' || auth()->user()->isManager() || auth()->user()->isAdmin()))
+                <div class="px-4 py-2 text-gray-500 text-sm font-bold">Purchase</div>
                 <a href="{{ route('inkoop.products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.products.*') ? 'bg-barroc-yellow text-black' : '' }}">
                     📦 Producten Beheer
-                </a>
-                <a href="{{ route('inkoop.purchase-orders.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.purchase-orders.*') ? 'bg-barroc-yellow text-black' : '' }}">
-                    📋 Inkooporders
                 </a>
                 <a href="{{ route('inkoop.products.low-stock') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.products.low-stock') ? 'bg-barroc-yellow text-black' : '' }}">
                     ⚠️ Lage Voorraad
