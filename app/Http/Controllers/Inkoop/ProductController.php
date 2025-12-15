@@ -45,7 +45,7 @@ class ProductController extends Controller
         // Zoeken
         if ($request->has('search') && $request->search) {
             $query->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('description', 'like', "%{$request->search}%");
+                ->orWhere('description', 'like', "%{$request->search}%");
         }
 
         // Filter op voorraadstatus

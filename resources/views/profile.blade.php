@@ -9,6 +9,9 @@
         <p class="text-gray-600">Beheer je accountgegevens en voorkeuren</p>
     </div>
     <div class="flex space-x-4">
+        <a href="{{ route('notifications.index') }}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
+            Notificaties
+        </a>
         <a href="{{ route('dashboard') }}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
             Terug naar Dashboard
         </a>
