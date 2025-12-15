@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -59,12 +60,11 @@ class UserController extends Controller
         }
 
         $data = $request->validate([
-            'role' => ['required', 'in:employee,manager,admin'],
-            'department_id' => ['nullable', 'exists:departments,id'],
+            'department_id' => ['required', 'exists:departments,id'],
         ]);
 
-        $user->role = $data['role'];
-        $user->department_id = $data['department_id'] ?? null;
+        $user->department_id = $data['department_id'];
+        $user->role = User::roleForDepartment((int) $data['department_id']) ?? $user->role;
         $user->save();
 
         return back()->with('status', 'Rol en afdeling bijgewerkt.');

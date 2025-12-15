@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,7 +25,7 @@ class Maintenance extends Model
     ];
 
     protected $casts = [
-        'scheduled_date' => 'date',
+        'scheduled_date' => 'datetime',
         'completed_date' => 'date',
         'costs' => 'decimal:2',
     ];
@@ -48,7 +49,7 @@ class Maintenance extends Model
 
     public function getStatusColor()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'voltooid' => 'green',
             'in_uitvoering' => 'blue',
             'geannuleerd' => 'red',
@@ -58,7 +59,7 @@ class Maintenance extends Model
 
     public function getPriorityColor()
     {
-        return match($this->priority) {
+        return match ($this->priority) {
             'urgent' => 'red',
             'hoog' => 'orange',
             'normaal' => 'yellow',
@@ -69,13 +70,12 @@ class Maintenance extends Model
     public function scopeUpcoming($query)
     {
         return $query->whereIn('status', ['gepland', 'in_uitvoering'])
-                    ->where('scheduled_date', '>=', now());
+            ->where('scheduled_date', '>=', now());
     }
 
     public function scopeOverdue($query)
     {
         return $query->where('status', 'gepland')
-                    ->where('scheduled_date', '<', now());
+            ->where('scheduled_date', '<', now());
     }
-
 }

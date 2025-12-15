@@ -14,7 +14,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\Inkoop\ProductController as InkoopProductController;
 use App\Http\Controllers\Inkoop\PurchaseOrderController;
-use App\Http\Controllers\Inkoop\NotificationController;
+// use App\Http\Controllers\Inkoop\NotificationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -140,6 +140,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download.pdf');
 
     // Maintenance routes
+    Route::get('/maintenance/calendar', [MaintenanceController::class, 'calendar'])->name('maintenance.calendar');
     Route::resource('maintenance', MaintenanceController::class);
     Route::post('/maintenance/{maintenance}/start', [MaintenanceController::class, 'start'])->name('maintenance.start');
     Route::post('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
@@ -190,17 +191,6 @@ Route::prefix('inkoop')->name('inkoop.')->middleware(['auth'])->group(function (
         if (!$user) {
             abort(403, 'Niet ingelogd');
         }
-
-        // Debug info
-        $debugInfo = [
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'role' => $user->role,
-            'department_id' => $user->department_id,
-            'department_name' => $user->department ? $user->department->name : 'none',
-            'is_manager' => $user->role === 'manager',
-            'is_admin' => $user->role === 'admin',
-        ];
 
         // Check 1: Purchase department (case insensitive)
         if ($user->department) {
@@ -255,6 +245,13 @@ Route::prefix('inkoop')->name('inkoop.')->middleware(['auth'])->group(function (
         // Meldingen
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{notification}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+        // Extra product routes
+        Route::post('/products/{product}/update-stock', [InkoopProductController::class, 'updateStock'])
+            ->name('products.updateStock');
+        Route::delete('/products/{product}/delete-image', [InkoopProductController::class, 'deleteImage'])
+            ->name('products.deleteImage');
+        Route::get('/products/low-stock', [InkoopProductController::class, 'lowStock'])
+            ->name('products.lowStock');
     });
 });
 
@@ -283,9 +280,9 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Debug route
-Route::get('/check-table', function() {
+Route::get('/check-table', function () {
     $columns = Schema::getColumnListing('maintenances');
     dd($columns);
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

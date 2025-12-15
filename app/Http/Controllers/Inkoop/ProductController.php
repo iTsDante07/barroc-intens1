@@ -45,7 +45,7 @@ class ProductController extends Controller
         // Zoeken
         if ($request->has('search') && $request->search) {
             $query->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('description', 'like', "%{$request->search}%");
+                ->orWhere('description', 'like', "%{$request->search}%");
         }
 
         // Filter op voorraadstatus
@@ -142,11 +142,6 @@ class ProductController extends Controller
             abort(403, 'Alleen inkoop medewerkers (Purchase department), managers en admins kunnen producten verwijderen.');
         }
 
-        // Check of er nog bestellingen zijn voor dit product
-        if ($product->purchaseOrderItems()->count() > 0) {
-            return redirect()->back()
-                ->with('error', 'Dit product kan niet worden verwijderd omdat het al in bestellingen is gebruikt.');
-        }
 
         // Afbeelding verwijderen
         if ($product->image && Storage::disk('public')->exists($product->image)) {

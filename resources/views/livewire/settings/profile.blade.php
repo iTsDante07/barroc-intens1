@@ -116,3 +116,4 @@ new class extends Component {
 
     </x-settings.layout>
 </section>
+

@@ -28,6 +28,7 @@
 
                 <div class="flex items-center space-x-4">
                     @auth
+                        @livewire('notification-bell')
                         <span class="text-barroc-yellow">{{ auth()->user()->name }}</span>
                         <span class="bg-barroc-yellow text-black px-3 py-1 rounded-full text-sm">
                             {{ auth()->user()->department->name ?? 'Geen afdeling' }}
@@ -87,8 +88,11 @@
                 <!-- Maintenance Links -->
                 @if(auth()->user()->department && (auth()->user()->department->name === 'Maintenance' || auth()->user()->isManager() || auth()->user()->isAdmin()))
                 <div class="px-4 py-2 text-gray-500 text-sm font-bold">ONDERHOUD</div>
-                <a href="{{ route('maintenance.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('maintenance.*') ? 'bg-barroc-yellow text-black' : '' }}">
+                <a href="{{ route('maintenance.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('maintenance.index') ? 'bg-barroc-yellow text-black' : '' }}">
                     🔧 Onderhoud
+                </a>
+                <a href="{{ route('maintenance.calendar') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('maintenance.calendar') ? 'bg-barroc-yellow text-black' : '' }}">
+                    🗓️ Planning
                 </a>
                 @endif
                 <!-- Purchase Links -->
@@ -96,9 +100,6 @@
                 <div class="px-4 py-2 text-gray-500 text-sm font-bold">Purchase</div>
                 <a href="{{ route('inkoop.products.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.products.*') ? 'bg-barroc-yellow text-black' : '' }}">
                     📦 Producten Beheer
-                </a>
-                <a href="{{ route('inkoop.purchase-orders.index') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.purchase-orders.*') ? 'bg-barroc-yellow text-black' : '' }}">
-                    📋 Inkooporders
                 </a>
                 <a href="{{ route('inkoop.products.low-stock') }}" class="block px-4 py-3 text-gray-700 hover:bg-barroc-yellow hover:text-black transition-colors {{ request()->routeIs('inkoop.products.low-stock') ? 'bg-barroc-yellow text-black' : '' }}">
                     ⚠️ Lage Voorraad

@@ -118,6 +118,12 @@
                                 @endif
                             </dd>
                         </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Geplande Tijd</dt>
+                            <dd class="mt-1 text-sm text-gray-900">
+                                {{ $maintenance->scheduled_date->format('H:i') }}
+                            </dd>
+                        </div>
                         @if($maintenance->completed_date)
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Voltooid op</dt>
