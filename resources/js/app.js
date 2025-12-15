@@ -6,19 +6,19 @@ function animateSplitText(
     shouldFloat = false,
     staggerValue = 0.05
 ) {
-    const textElement = document.querySelector(selector);
+    let textElement = document.querySelector(selector);
 
     if (textElement) {
-        const chars = [];
+        let chars = [];
 
         function splitNode(node) {
-            const childNodes = Array.from(node.childNodes);
+            let childNodes = Array.from(node.childNodes);
             node.innerHTML = "";
 
             childNodes.forEach((child) => {
                 if (child.nodeType === 3) {
-                    const text = child.textContent;
-                    const segments = text.split(/(\s+)/);
+                    let text = child.textContent;
+                    let segments = text.split(/(\s+)/);
 
                     segments.forEach((segment) => {
                         if (!segment) return;
@@ -26,11 +26,11 @@ function animateSplitText(
                         if (segment.match(/^\s+$/)) {
                             node.appendChild(document.createTextNode(segment));
                         } else {
-                            const wordDiv = document.createElement("div");
+                            let wordDiv = document.createElement("div");
                             wordDiv.style.display = "inline-block";
 
                             segment.split("").forEach((char) => {
-                                const charSpan = document.createElement("span");
+                                let charSpan = document.createElement("span");
                                 charSpan.innerText = char;
                                 charSpan.style.display = "inline-block";
                                 charSpan.classList.add("char");
