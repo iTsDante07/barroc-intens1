@@ -115,6 +115,11 @@ class Product extends Model
         }
     }
 
+    public function isLowStock(): bool
+    {
+        return $this->stock <= $this->min_stock;
+    }
+
     protected function notifyLowStock(): void
     {
         $inkoopUsers = User::where('department_id', 4)->get();
