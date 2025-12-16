@@ -199,7 +199,7 @@
         <!-- Quick Voorraad Update (optioneel) -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Snelle Voorraad Aanpassing</h3>
-            <form action="{{ route('inkoop.products.updateStock', $product) }}" method="POST" class="space-y-4">
+            <form action="{{ route('inkoop.products.update-stock', $product) }}" method="POST" class="space-y-4">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>

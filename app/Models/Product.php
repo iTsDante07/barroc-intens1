@@ -51,6 +51,11 @@ class Product extends Model
         });
     }
 
+    public function isLowStock(): bool
+    {
+        return $this->stock <= $this->min_stock;
+    }
+
     // Scope voor actieve producten
     public function scopeActive($query)
     {
