@@ -18,6 +18,11 @@ class MaintenanceController extends Controller
 
         $query = Maintenance::query();
 
+        // Als de gebruiker een monteur is, laat alleen zijn/haar eigen taken zien
+        if (auth()->user()->isMaintenance() && !auth()->user()->isAdmin()) {
+            $query->where('assigned_to', auth()->id());
+        }
+
         if ($statusFilter === 'gepland') {
             $query->where('status', 'gepland')
                 ->where('scheduled_date', '>', now());
@@ -53,11 +58,17 @@ class MaintenanceController extends Controller
 
         $maintenances = $query->orderBy('scheduled_date', 'desc')->get();
 
-        $totalCount = Maintenance::count();
-        $completedCount = Maintenance::where('status', 'voltooid')->count();
-        $upcomingCount = Maintenance::where('status', 'gepland')
+        // Statistieken ook filteren op basis van gebruiker
+        $statsQuery = Maintenance::query();
+        if (auth()->user()->isMaintenance() && !auth()->user()->isAdmin()) {
+            $statsQuery->where('assigned_to', auth()->id());
+        }
+
+        $totalCount = (clone $statsQuery)->count();
+        $completedCount = (clone $statsQuery)->where('status', 'voltooid')->count();
+        $upcomingCount = (clone $statsQuery)->where('status', 'gepland')
             ->where('scheduled_date', '>', now())->count();
-        $overdueCount = Maintenance::where('status', 'gepland')
+        $overdueCount = (clone $statsQuery)->where('status', 'gepland')
             ->where('scheduled_date', '<', now())->count();
 
         return view('maintenance.index', compact(
@@ -149,6 +160,16 @@ class MaintenanceController extends Controller
             ->with('success', 'Onderhoudstaak succesvol verwijderd!');
     }
 
+    public function start(Maintenance $maintenance)
+    {
+        $maintenance->update([
+            'status' => 'in_uitvoering'
+        ]);
+
+        return redirect()->route('maintenance.show', $maintenance)
+            ->with('success', 'Onderhoudstaak gestart!');
+    }
+
     public function complete(Maintenance $maintenance)
     {
         $maintenance->update([
@@ -160,6 +181,30 @@ class MaintenanceController extends Controller
             ->with('success', 'Onderhoudstaak gemarkeerd als voltooid!');
     }
 
+    public function cancel(Maintenance $maintenance)
+    {
+        $maintenance->update([
+            'status' => 'geannuleerd'
+        ]);
+
+        return redirect()->route('maintenance.show', $maintenance)
+            ->with('success', 'Onderhoudstaak geannuleerd!');
+    }
+
+    public function addTechnicianNotes(Request $request, Maintenance $maintenance)
+    {
+        $validated = $request->validate([
+            'technician_notes' => 'required|string'
+        ]);
+
+        $maintenance->update([
+            'technician_notes' => $validated['technician_notes']
+        ]);
+
+        return redirect()->route('maintenance.show', $maintenance)
+            ->with('success', 'Monteur notities toegevoegd!');
+    }
+
     public function calendar()
     {
         $user = auth()->user();
@@ -168,9 +213,15 @@ class MaintenanceController extends Controller
             abort(403, 'Alleen monteurs en admins hebben toegang tot de planning.');
         }
 
-        $maintenances = Maintenance::with(['assignedTechnician', 'customer'])
-            ->whereNotNull('scheduled_date')
-            ->get();
+        $query = Maintenance::with(['assignedTechnician', 'customer'])
+            ->whereNotNull('scheduled_date');
+
+        // Als de gebruiker een monteur is (en geen admin), laat alleen zijn/haar eigen taken zien
+        if ($user->isMaintenance() && !$user->isAdmin()) {
+            $query->where('assigned_to', $user->id);
+        }
+
+        $maintenances = $query->get();
 
         $events = $maintenances->map(fn($maintenance) => [
             'id' => $maintenance->id,
