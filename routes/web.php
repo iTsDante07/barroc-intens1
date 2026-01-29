@@ -16,7 +16,7 @@ use App\Http\Controllers\Inkoop\ProductController as InkoopProductController;
 use App\Http\Controllers\Inkoop\PurchaseOrderController;
 use App\Http\Controllers\Inkoop\NotificationController;
 use App\Http\Controllers\UserController;
-use App\Http\Middleware\CheckInkoopAccess; // <--- NEW IMPORT
+use App\Http\Middleware\CheckInkoopAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
